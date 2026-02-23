@@ -1,19 +1,3 @@
-mkdir "section_01 Getting Started"
-mkdir "section_02 Course Slides"
-mkdir "section_03 Getting Started with Kafka "
-mkdir "section_04 Understanding Kafka components and its internal "
-mkdir "section_05 Application Overview"
-mkdir "section_06 Source Code for this course"
-mkdir "section_07 Build SpringBoot Kafka Producer"
-mkdir "section_08 Integration Testing using JUnit5 "
-mkdir "section_09 Unit Testing using JUnit5"
-mkdir "section_10 Kafka Producer Sending Message with Key"
-mkdir "section_11 Kafka Producer Important Configuration"
-mkdir "section_12 Build SpringBoot Kafka Consumer"
-mkdir "section_13 Consumer Groups and Consumer Offset Management"
-mkdir "section_14 Persisting Library Events in DB -using H2 InMemory Database"
-mkdir "section_15 Integration Testing using Embedded Kafka- Kafka Consumer "
-mkdir "section_16 Error Handling, Retry and Recovery - Kafka Consumers"
-mkdir "section_17 Error Handling, Retry and Recovery - Kafka Producer"
-mkdir "section_18  Kafka Security using SSL"
-mkdir "section_19 Accessing SSL Secured Kafka Cluster using Spring Boot "
+
+### Course: https://cotiviti.udemy.com/course/apache-kafka-for-developers-using-springboot/learn/lecture/37748400#overview
+### Github: https://github.com/dilipsundarraj1/kafka-for-developers-using-spring-boot-v2/blob/main/SetUpKafkaDocker.md#set-up-broker-and-zookeeper
