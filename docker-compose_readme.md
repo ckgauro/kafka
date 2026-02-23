@@ -249,3 +249,57 @@ This compose is basically making Kafka “work everywhere” in a dev environmen
     - `KAFKA_NODE_ID`
     - `KAFKA_CONTROLLER_*`
     - `CLUSTER_ID`
+
+----------
+# In Details
+
+# image: confluentinc/cp-kafka:7.4.0 — Detailed Explanation
+
+This line tells Docker **which image to pull and run** for your Kafka container.
+
+```yaml
+image: confluentinc/cp-kafka:7.4.0
+```
+
+## 1️⃣ Image Name Structure
+
+Docker image format:
+
+```code
+<repository>/<image-name>:<tag>
+```
+| Part           | Meaning                             |
+| -------------- | ----------------------------------- |
+| `confluentinc` | Docker Hub organization (publisher) |
+| `cp-kafka`     | Image name                          |
+| `7.4.0`        | Version tag                         |
+
+
+## 2️⃣ What is confluentinc?
+
+`confluentinc` is the official Docker Hub organization of Confluent, the company founded by Kafka’s original creators.
+
+Confluent maintains production-grade Kafka container images.
+
+This is not a random community image.
+
+3️⃣ What is cp-kafka?
+
+cp-kafka stands for:
+
+Confluent Platform - Kafka
+
+This image contains:
+
+Apache Kafka broker
+
+Confluent packaging scripts
+
+KRaft mode support
+
+Production-ready configurations
+
+Health checks and startup logic
+
+It is not just “vanilla Apache Kafka binaries.”
+It includes Confluent’s runtime tooling.
