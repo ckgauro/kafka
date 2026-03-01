@@ -397,6 +397,105 @@ docker exec -it kafka1 bash
 ```bash
 /etc/kafka/server.properties
 ```
+#### server.properties 
+```properties
+broker.id=0
+num.network.threads=3
+num.io.threads=8
+socket.send.buffer.bytes=102400
+socket.receive.buffer.bytes=102400
+socket.request.max.bytes=104857600
+log.dirs=/var/lib/kafka
+num.partitions=1
+num.recovery.threads.per.data.dir=1
+offsets.topic.replication.factor=1
+transaction.state.log.replication.factor=1
+transaction.state.log.min.isr=1
+log.retention.hours=168
+log.retention.check.interval.ms=300000
+zookeeper.connect=localhost:2181
+zookeeper.connection.timeout.ms=18000
+group.initial.rebalance.delay.ms=0
+```
+
+# Kafka `server.properties` — Summary Tables
+
+---
+
+## 1️⃣ Broker Identity
+
+| Property | Meaning |
+|-----------|----------|
+| `broker.id=0` | Unique ID of this Kafka broker |
+
+---
+
+## 2️⃣ Thread & Performance Settings
+
+| Property | Meaning |
+|-----------|----------|
+| `num.network.threads=3` | Threads handling network requests |
+| `num.io.threads=8` | Threads for disk I/O operations |
+| `num.recovery.threads.per.data.dir=1` | Threads used during log recovery |
+
+---
+
+## 3️⃣ Socket & Network Buffers
+
+| Property | Meaning |
+|-----------|----------|
+| `socket.send.buffer.bytes=102400` | Send buffer size |
+| `socket.receive.buffer.bytes=102400` | Receive buffer size |
+| `socket.request.max.bytes=104857600` | Max request size (100MB) |
+
+---
+
+## 4️⃣ Log & Storage Configuration
+
+| Property | Meaning |
+|-----------|----------|
+| `log.dirs=/var/lib/kafka` | Directory storing Kafka logs |
+| `num.partitions=1` | Default partitions per topic |
+| `log.retention.hours=168` | Retain messages for 7 days |
+| `log.retention.check.interval.ms=300000` | Retention check every 5 minutes |
+
+---
+
+## 5️⃣ Replication & Transactions (Single Broker Setup)
+
+| Property | Meaning |
+|-----------|----------|
+| `offsets.topic.replication.factor=1` | Replication factor for offsets topic |
+| `transaction.state.log.replication.factor=1` | Transaction log replication |
+| `transaction.state.log.min.isr=1` | Minimum in-sync replicas |
+
+---
+
+## 6️⃣ ZooKeeper Configuration (Pre-KRaft Mode)
+
+| Property | Meaning |
+|-----------|----------|
+| `zookeeper.connect=localhost:2181` | ZooKeeper connection string |
+| `zookeeper.connection.timeout.ms=18000` | ZooKeeper connection timeout |
+
+> ⚠ This indicates **ZooKeeper-based Kafka**, not KRaft mode.
+
+---
+
+## 7️⃣ Consumer Group Behavior
+
+| Property | Meaning |
+|-----------|----------|
+| `group.initial.rebalance.delay.ms=0` | No delay before first consumer rebalance |
+
+---
+
+## ✅ Overall
+
+This configuration represents a **single-node Kafka broker**, using **ZooKeeper mode**, optimized for development/testing with minimal replication and default performance settings.
+
+
+-------
 
 ## 3. The log file is present in the below path.
 ```bash

@@ -34,7 +34,7 @@ Used for debugging, checking logs, or running Kafka CLI tools.
 
 ---
 ### 2. Create a Kafka topic using the **kafka-topics** command.
-    - **kafka1:19092** refers to the **KAFKA_ADVERTISED_LISTENERS** in the `docker-compose.yml` file.
+- **kafka1:19092** refers to the **KAFKA_ADVERTISED_LISTENERS** in the `docker-compose.yml` file.
 
 ```bash
 kafka-topics --bootstrap-server kafka1:19092 \
