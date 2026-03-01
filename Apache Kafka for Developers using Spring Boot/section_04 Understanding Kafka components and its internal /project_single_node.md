@@ -1,6 +1,217 @@
 
+# Set Up Kafka in Local using Docker
 
+## Set up broker 
+- Navigate to the path where the `docker-compose.yml` is located and then run the below command.
+```bash
 docker-compose up
+```
+## docker-compose up
+
+Builds (if needed) and starts all services defined in `docker-compose.yml`.  
+Creates containers, networks, and volumes, then runs them in the foreground by default.  
+
+Use `-d` to run in detached mode (background).  
+It’s the standard command to launch your full multi-container application.
+---
+
+# Producer and Consume the Messages
+### 1. Let's going to the container by running the below command.
+```bash
+docker exec -it kafka1 bash
+```
+
+#### `docker exec -it kafka1 bash`
+
+Opens an interactive Bash shell inside the running `kafka1` container.
+
+- `exec` → run a command in an existing container  
+- `-it` → interactive terminal  
+- `kafka1` → container name  
+- `bash` → shell to execute  
+
+Used for debugging, checking logs, or running Kafka CLI tools.
+
+---
+### 2. Create a Kafka topic using the **kafka-topics** command.
+    - **kafka1:19092** refers to the **KAFKA_ADVERTISED_LISTENERS** in the `docker-compose.yml` file.
+
+```bash
+kafka-topics --bootstrap-server kafka1:19092 \
+             --create \
+             --topic test-topic \
+             --replication-factor 1 --partitions 1
+```
+Creates a new Kafka topic named test-topic.
+| Part                              | Purpose             | Explanation                                     |
+| --------------------------------- | ------------------- | ----------------------------------------------- |
+| `kafka-topics`                    | Kafka CLI tool      | Manages topics (create, list, describe, delete) |
+| `--bootstrap-server kafka1:19092` | Broker address      | Connects to Kafka via internal Docker listener  |
+| `--create`                        | Operation flag      | Creates a new topic                             |
+| `--topic test-topic`              | Topic name          | Name of the topic to create                     |
+| `--replication-factor 1`          | Replication setting | Single replica (used in single-broker setup)    |
+| `--partitions 1`                  | Partition count     | Creates one partition for the topic             |
+
+---
+### 3. Produce Messages to the topic.
+```bash
+docker exec --interactive --tty kafka1  \
+kafka-console-producer --bootstrap-server kafka1:19092 \
+                       --topic test-topic
+```
+
+Runs Kafka console producer inside the kafka1 container.
+
+| Part                              | Purpose                  | Explanation                                          |
+| --------------------------------- | ------------------------ | ---------------------------------------------------- |
+| `docker exec`                     | Run command in container | Executes a command inside a running Docker container |
+| `--interactive --tty` (`-it`)     | Interactive mode         | Opens a terminal so you can type messages manually   |
+| `kafka1`                          | Container name           | Target Kafka container                               |
+| `kafka-console-producer`          | Kafka CLI tool           | Sends messages to a Kafka topic                      |
+| `--bootstrap-server kafka1:19092` | Broker address           | Connects to Kafka via internal Docker listener       |
+| `--topic test-topic`              | Topic name               | Messages will be published to `test-topic`           |
+
+
+---
+
+### 4. Consume Messages from the topic.
+```bash
+docker exec --interactive --tty kafka1  \
+kafka-console-consumer --bootstrap-server kafka1:19092 \
+                       --topic test-topic \
+                       --from-beginning
+```
+
+| Part                              | Purpose              | Explanation                                    |
+| --------------------------------- | -------------------- | ---------------------------------------------- |
+| `docker exec`                     | Run inside container | Executes command in running `kafka1` container |
+| `--interactive --tty` (`-it`)     | Interactive mode     | Opens terminal to view streaming messages      |
+| `kafka-console-consumer`          | Kafka CLI tool       | Reads messages from a topic                    |
+| `--bootstrap-server kafka1:19092` | Broker address       | Connects using internal Docker listener        |
+| `--topic test-topic`              | Topic name           | Consumes messages from `test-topic`            |
+| `--from-beginning`                | Offset option        | Reads all messages from the start of the topic |
+
+# Producer and Consume the Messages With Key and Value
+#### 1. Produce Messages with Key and Value to the topic.
+```bash
+docker exec --interactive --tty kafka1  \
+kafka-console-producer --bootstrap-server kafka1:19092 \
+                       --topic test-topic \
+                       --property "key.separator=-" --property "parse.key=true"
+```     
+| Part                              | Purpose              | Explanation                            |
+| --------------------------------- | -------------------- | -------------------------------------- |
+| `docker exec -it kafka1`          | Run inside container | Opens interactive terminal in `kafka1` |
+| `kafka-console-producer`          | CLI tool             | Produces (sends) messages to Kafka     |
+| `--bootstrap-server kafka1:19092` | Broker address       | Connects via internal Docker listener  |
+| `--topic test-topic`              | Target topic         | Messages are sent to `test-topic`      |
+| `parse.key=true`                  | Enable key parsing   | Splits input into key and value        |
+| `key.separator=-`                 | Key delimiter        | Uses `-` to separate key and value     |
+
+**Example Input**
+```bash
+order1-hello
+```
+- Key → `order1`
+- Value → `hello`
+
+#### 2. Consuming messages with Key and Value from a topic.
+
+```bash
+docker exec --interactive --tty kafka1  \
+kafka-console-consumer --bootstrap-server kafka1:19092 \
+                       --topic test-topic \
+                       --from-beginning \
+                       --property "key.separator= - " --property "print.key=true"
+
+```
+
+| Part                              | Purpose              | Explanation                               |
+| --------------------------------- | -------------------- | ----------------------------------------- |
+| `docker exec -it kafka1`          | Run inside container | Opens interactive terminal in `kafka1`    |
+| `kafka-console-consumer`          | CLI tool             | Consumes (reads) messages from Kafka      |
+| `--bootstrap-server kafka1:19092` | Broker address       | Connects using internal Docker listener   |
+| `--topic test-topic`              | Topic name           | Reads from `test-topic`                   |
+| `--from-beginning`                | Offset option        | Reads all messages starting from offset 0 |
+| `print.key=true`                  | Show key             | Displays message key along with value     |
+| `key.separator= - `               | Key delimiter        | Prints key and value separated by `-`     |
+
+
+**Output Format Example**
+
+If produced as:
+```bash
+order1-hello
+```
+Consumer output:
+```code
+order1 - hello
+```
+
+# Consume Messages using Consumer Groups
+```bash
+docker exec --interactive --tty kafka1  \
+kafka-console-consumer --bootstrap-server kafka1:19092 \
+                       --topic test-topic --group console-consumer-41911\
+                       --property "key.separator= - " --property "print.key=true"
+```
+| Part                              | Purpose              | Explanation                                    |
+| --------------------------------- | -------------------- | ---------------------------------------------- |
+| `docker exec -it kafka1`          | Run inside container | Opens interactive terminal in `kafka1`         |
+| `kafka-console-consumer`          | CLI tool             | Consumes messages from Kafka                   |
+| `--bootstrap-server kafka1:19092` | Broker address       | Connects via internal Docker listener          |
+| `--topic test-topic`              | Topic name           | Reads from `test-topic`                        |
+| `--group console-consumer-41911`  | Consumer group       | Enables offset tracking and group coordination |
+| `print.key=true`                  | Show key             | Displays message key with value                |
+| `key.separator= - `               | Output format        | Separates key and value using `-`              |
+
+
+**Offset Behavior (With Group)**
+| Scenario               | Start Position                                                 |
+| ---------------------- | -------------------------------------------------------------- |
+| First run of new group | Reads from latest offset (default)                             |
+| Subsequent runs        | Resumes from last committed offset                             |
+| Add `--from-beginning` | Forces read from offset 0 (only if no committed offset exists) |
+
+
+
+Example Messages:
+```bash
+a-abc
+b-bus 
+```
+------
+
+# Consume Messages With Headers
+```bash
+docker exec --interactive --tty kafka1  \
+kafka-console-consumer --bootstrap-server kafka1:19092 \
+                       --topic library-events.DLT \
+                       --property "print.headers=true" --property "print.timestamp=true" 
+```
+| Part                              | Purpose                                             |
+| --------------------------------- | --------------------------------------------------- |
+| `docker exec -it kafka1`          | Run command inside `kafka1` container interactively |
+| `kafka-console-consumer`          | Start Kafka CLI consumer                            |
+| `--bootstrap-server kafka1:19092` | Connect to broker via internal listener             |
+| `--topic library-events.DLT`      | Consume messages from Dead Letter Topic             |
+| `print.headers=true`              | Display message headers                             |
+| `print.timestamp=true`            | Display message timestamps                          |
+
+🔹 What This Does
+- Consumes messages from library-events.DLT and prints:
+- Message value
+- Headers
+- 
+Timestamp
+
+**Example Messages:**
+```bash
+a-abc
+b-bus
+```
+
+
 
 -----
 kafka-topics --bootstrap-server kafka1:19092 \
