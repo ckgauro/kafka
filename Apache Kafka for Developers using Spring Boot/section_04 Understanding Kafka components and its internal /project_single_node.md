@@ -60,6 +60,12 @@ kafka-console-producer --bootstrap-server kafka1:19092 \
                        --topic test-topic
 ```
 
+**inputData**
+```bash
+>hello tdoay
+>Good
+>thanks
+```
 Runs Kafka console producer inside the kafka1 container.
 
 | Part                              | Purpose                  | Explanation                                          |
@@ -80,6 +86,13 @@ docker exec --interactive --tty kafka1  \
 kafka-console-consumer --bootstrap-server kafka1:19092 \
                        --topic test-topic \
                        --from-beginning
+```
+
+**output**
+```bash
+hello tdoay
+Good
+thanks
 ```
 
 | Part                              | Purpose              | Explanation                                    |
