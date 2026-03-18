@@ -1,3 +1,7 @@
+https://github.com/lydtechconsulting/introduction-to-kafka-with-spring-boot/tree/02-consume
+
+https://cotiviti.udemy.com/course/introduction-to-kafka-with-spring-boot/learn/lecture/38164904?start=135#overview
+
 # Dealing with Kafka Conundrums in the Real World
 
 This section collates a number of the Kafka articles related to this course put together by 

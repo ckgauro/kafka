@@ -85,3 +85,113 @@ spring:
 | parameter               | OrderCreated payload            | Message object        | JSON converted to Java object       |
 | log.info                | payload logged                  | Logging message       | Shows received message              |
 | dispatchService.process | method call                     | Business logic        | Processes received order            |
+
+
+
+---
+## 🧪 Testing
+
+### 1. Run Dispatch Application
+
+Start the Spring Boot dispatch service normally run from IDE. 
+or
+```bash
+./mvnw spring-boot:run
+```
+---
+
+### 2. Connect to Kafka container
+
+Open terminal and connect to Kafka docker container.
+
+```bash
+docker exec -it kafka1 bash
+```
+
+---
+
+### 3. Run Kafka Producer
+
+Inside container run:
+
+```bash
+kafka-console-producer --bootstrap-server kafka1:19092 --topic order.created
+```
+
+---
+
+### 4. Send Test Messages
+
+Type messages and press ENTER.
+
+```text
+>{"orderId":"550e8400-e29b-41d4-a716-446655440000","item":"book"}
+>{"orderId":"550e8400-e29b-41d4-a716-446655440000","item":"book1"}       
+>{"orderId":"550e8400-e29b-41d4-a716-446655440000","item":"book2"} 
+```
+
+---
+
+### 5. Verify Dispatch Application Logs
+
+In dispatch application console you should see logs:
+
+```text
+Received message: payload: OrderCreated(orderId=550e8400-e29b-41d4-a716-446655440000, item=book)
+Received message: payload: OrderCreated(orderId=550e8400-e29b-41d4-a716-446655440000, item=book1)
+Received message: payload: OrderCreated(orderId=550e8400-e29b-41d4-a716-446655440000, item=book2)
+```
+
+---
+
+### 6. Expected Flow
+
+```bash
+Producer → Kafka Topic (order.created) → OrderCreateHandler → DispatchService → Log
+```
+
+----
+
+## 7. Now lets pass wrong json
+
+
+### 1. Run Kafka Producer
+
+Inside container run:
+
+```bash
+kafka-console-producer --bootstrap-server kafka1:19092 --topic order.created
+```
+
+---
+
+### 2. Send Test Messages
+
+Type messages and press ENTER.
+
+```text
+>{"orderId":"1234","item":"book4"}
+```
+
+---
+
+### 3. Verify Dispatch Application Logs
+
+In dispatch application console you should see logs: Error occurred while deserializing message
+Could not parse message
+
+```text
+It will throws error indicating it could not parse
+```
+
+### 4. Offset Behavior After Error
+Even when an error occurs, Kafka may still move to the next offset.
+
+| Concept                   | Meaning                    | Explanation                   |
+| ------------------------- | -------------------------- | ----------------------------- |
+| Offset                    | Message position in topic  | Each message has index        |
+| Offset increase           | Next message pointer moves | Consumer skips failed message |
+| ErrorHandlingDeserializer | Handles error safely       | Prevents consumer crash       |
+| Consumer continues        | Reads next message         | Application keeps running     |
+
+
