@@ -71,3 +71,10 @@ Uncovering the consumer retry behaviour when failures occur in the middle of pro
 
 
 ## - Resources for this lecture
+
+
+## - To Start Kafka service
+```bash
+
+bin/kafka-server-start config/kraft/server.properties
+```
