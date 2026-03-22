@@ -8,10 +8,15 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @Slf4j
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 @Component
 public class OrderCreateHandler {
+
     private final DispatchService dispatchService;
+
+    public OrderCreateHandler(DispatchService dispatchService) {
+        this.dispatchService = dispatchService;
+    }
 
     @KafkaListener(
             id="orderConsumerClient",
@@ -19,8 +24,13 @@ public class OrderCreateHandler {
             groupId = "dispatch.order.created.consumer",
             containerFactory = "kafkaListenerContainerFactory"
     )
-    public void listen(OrderCreated payload){
+    public void listen(OrderCreated payload) throws Exception{
         log.info("Received message: payload: {}", payload);
-        dispatchService.process(payload);
+        try{
+            dispatchService.process(payload);
+        }catch (Exception e){
+            log.error("Processing failure : {}",e);
+        }
+       // dispatchService.process(payload);
     }
 }

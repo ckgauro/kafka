@@ -26,11 +26,11 @@ Consume Using Cli
 
 run application
 producer
-- kafka-console-producer --bootstrap-servers localhost 9092 --topic order.created
+- kafka-console-producer --bootstrap-server localhost 9092 --topic order.created
 {"orderId":"550e8400-e29b-41d4-a716-446655440000","item":"book10"} 
 
 consumer
-- kafka-console-consumer --bootstrap-servers localhost 9092 --topic order.dispatched
+- kafka-console-consumer --bootstrap-server localhost 9092 --topic order.dispatched
 
 
 
