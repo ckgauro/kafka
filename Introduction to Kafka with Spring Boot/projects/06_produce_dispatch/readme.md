@@ -891,21 +891,6 @@ public class DispatchService {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ============
 
 
@@ -942,6 +927,8 @@ Inside container run:
 kafka-console-producer --bootstrap-server kafka1:19092 --topic order.created
 ```
 
+
+
 ---
 
 ### 4. Send Test Messages
@@ -968,26 +955,10 @@ Received message: payload: OrderCreated(orderId=550e8400-e29b-41d4-a716-44665544
 
 ---
 
-
-mvn clean install 
-- 5 tests
-
-
----------
-
-Consume Using Cli
-
-run application
-producer
-- kafka-console-producer --bootstrap-server localhost 9092 --topic order.created
-{"orderId":"550e8400-e29b-41d4-a716-446655440000","item":"book10"} 
-
-consumer
-- kafka-console-consumer --bootstrap-server localhost 9092 --topic order.dispatched
-
-
-
-
+At the same time in other console run 
+```bash
+kafka-console-consumer --bootstrap-server kafka1:9092 --topic order.dispatched
+```
 
 
 
