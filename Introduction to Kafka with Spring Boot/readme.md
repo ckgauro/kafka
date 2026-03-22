@@ -78,3 +78,109 @@ Uncovering the consumer retry behaviour when failures occur in the middle of pro
 
 bin/kafka-server-start config/kraft/server.properties
 ```
+
+## Automatic Topic Creation in Kafka
+
+| Topic | Description |
+|--------|------------|
+| Automatic Topic Creation | Kafka can create a topic automatically when a producer or consumer tries to use a topic that does not exist. |
+| When it happens | When a message is sent to a non-existing topic OR a consumer subscribes to a non-existing topic. |
+| Controlled by | Broker configuration and Consumer configuration flags. |
+| Recommended in production | Usually disabled to avoid accidental topic creation. |
+
+---
+
+## 1. Broker Configuration
+
+| Property | Value |
+|----------|--------|
+| Config Name | `auto.create.topics.enable` |
+| Location | Kafka Broker (`server.properties`) |
+| Default Value | `true` |
+| Meaning | Broker will automatically create topic if it does not exist |
+| Example | If producer sends to `order.created`, broker creates topic automatically |
+
+### Example (server.properties)
+
+```properties
+auto.create.topics.enable=true
+```
+| Property | Value |
+|----------|--------|
+| If true | Topics created automatically |
+| If false | Topic must be created manually |
+
+## 2. Consumer Configuration
+| Property      | Value                                                                 |
+| ------------- | --------------------------------------------------------------------- |
+| Config Name   | `allow.auto.create.topics`                                            |
+| Location      | Consumer config                                                       |
+| Default Value | `true`                                                                |
+| Meaning       | Consumer allows broker to create topic automatically when subscribing |
+
+### Example (Spring / Consumer config)
+```properties
+spring.kafka.consumer.allow-auto-create-topics=true
+```
+
+| Property | Value |
+|----------|--------|
+| If true | Consumer can trigger topic creation |
+| If false | Consumer fails if topic does not exist |
+
+
+## 3. How Automatic Topic Creation Works
+| Step | Action                                        |
+| ---- | --------------------------------------------- |
+| 1    | Producer sends message to topic               |
+| 2    | Topic does not exist                          |
+| 3    | Broker checks `auto.create.topics.enable`     |
+| 4    | If true → topic created                       |
+| 5    | Consumer can also trigger creation if allowed |
+
+## 4. Example Scenario
+| Situation                                  | Result                      |
+| ------------------------------------------ | --------------------------- |
+| Producer sends to `order.created`          | Topic created automatically |
+| Consumer subscribes to `payment.completed` | Topic created automatically |
+| Broker flag false                          | Error if topic missing      |
+| Consumer flag false                        | Error if topic missing      |
+
+## 5. Why disable in Production
+| Reason              | Explanation                    |
+| ------------------- | ------------------------------ |
+| Avoid mistakes      | Typo creates wrong topic       |
+| Control partitions  | Manual creation allows config  |
+| Control replication | Needed for production clusters |
+| Security            | Prevent unwanted topics        |
+
+## 6. Production Recommendation
+| Environment | Setting |
+| ----------- | ------- |
+| Development | true    |
+| Testing     | true    |
+| Production  | false   |
+
+Example production setup:
+
+```properties
+auto.create.topics.enable=false
+spring.kafka.consumer.allow-auto-create-topics=false
+```
+
+## 7. Manual Topic Creation (Recommended)
+```bash
+kafka-topics.sh \
+--create \
+--topic order.created \
+--bootstrap-server localhost:9092 \
+--partitions 3 \
+--replication-factor 1
+```
+
+| Advantage            | Reason                  |
+| -------------------- | ----------------------- |
+| Full control         | partitions, replication |
+| No accidental topics | safer                   |
+| Better performance   | optimized config        |
+

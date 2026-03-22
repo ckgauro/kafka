@@ -8,15 +8,15 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @Slf4j
-//@RequiredArgsConstructor
+@RequiredArgsConstructor
 @Component
 public class OrderCreateHandler {
 
     private final DispatchService dispatchService;
 
-    public OrderCreateHandler(DispatchService dispatchService) {
-        this.dispatchService = dispatchService;
-    }
+//    public OrderCreateHandler(DispatchService dispatchService) {
+//        this.dispatchService = dispatchService;
+//    }
 
     @KafkaListener(
             id="orderConsumerClient",
