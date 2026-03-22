@@ -847,7 +847,47 @@ DB / API / Event / Log
 ```
 -------
 
+## DispatchService in Kafka + Spring Boot
 
+This class is a **service layer component**. Its main job is to take an `OrderCreated` event, create a new `OrderDispatched` event from it, and publish that new event to another Kafka topic.
+
+So in simple words:
+
+> `DispatchService` receives an order-created event and sends an order-dispatched event to Kafka.
+
+---
+
+```java
+@RequiredArgsConstructor
+@Service
+public class DispatchService {
+    private static final String ORDER_DISPATCHED_TOPIC="order.dispatched";
+    private final KafkaTemplate<String,Object> kafkaProducer;
+
+//    public DispatchService(KafkaTemplate<String, Object> kafkaProducer) {
+//        this.kafkaProducer = kafkaProducer;
+//    }
+
+    public void process(OrderCreated orderCreated) throws Exception{
+        OrderDispatched orderDispatched= OrderDispatched.builder()
+                .orderId(orderCreated.getOrderId())
+                .build();
+        kafkaProducer.send(ORDER_DISPATCHED_TOPIC,orderDispatched).get();
+
+    }
+}
+```
+
+### Summary Table
+| Part                                 | Purpose                  | Explanation                                   |
+| ------------------------------------ | ------------------------ | --------------------------------------------- |
+| `@Service`                           | Marks service layer bean | Spring creates and manages this class         |
+| `@RequiredArgsConstructor`           | Constructor injection    | Lombok generates constructor for final fields |
+| `ORDER_DISPATCHED_TOPIC`             | Target Kafka topic       | Message will be sent to `order.dispatched`    |
+| `KafkaTemplate<String, Object>`      | Kafka producer helper    | Used to publish messages to Kafka             |
+| `process(OrderCreated orderCreated)` | Business logic method    | Converts input event into output event        |
+| `OrderDispatched.builder()`          | Creates new event object | Uses Lombok builder pattern                   |
+| `send(...).get()`                    | Sends synchronously      | Waits until Kafka acknowledges the send       |
 
 
 
