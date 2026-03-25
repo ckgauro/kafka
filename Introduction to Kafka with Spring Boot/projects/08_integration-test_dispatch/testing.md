@@ -850,24 +850,26 @@ This improves type safety.
 They work even as package-private, but many teams prefer explicit visibility.
 
 Example:
+
 ```java
 public void receiveDispatchPreparing(...)
 ```
 
-4. Could validate payload content, not only count
+**4. Could validate payload content, not only count**
 
 Right now the test only checks that one message arrived.
 
 It does not verify:
 
-correct orderId
-expected field values
-business correctness
+- correct orderId
+- expected field values
+- business correctness
 
 A stronger version could store the received payload and assert its content.
 
-How the full flow likely works
-Expected business flow
+### How the full flow likely works
+
+**Expected business flow**
 
 The intention seems to be:
 
@@ -878,13 +880,15 @@ The intention seems to be:
 5. Test listener consumes both outbound messages
 6. Counters confirm both messages were emitted
 
-So testOrderDispatchFlow() should ideally validate that complete chain.
+So `testOrderDispatchFlow()` should ideally validate that complete chain.
 
-Why your setUp() method is critical
+### Why your setUp() method is critical
 
 This line is one of the most important parts of the class:
 
+```java
 ContainerTestUtils.waitForAssignment(container, embeddedKafkaBroker.getPartitionsPerTopic())
+```
 
 Without it, tests may randomly fail because the listener was not ready when the message was sent.
 
@@ -892,24 +896,24 @@ That kind of issue causes flaky Kafka tests.
 
 So this setup is a very good practice.
 
-In simple words
+**In simple words**
 
 This class is testing Kafka messaging in a real Spring test environment.
 
 It:
+- starts Spring Boot
+- starts an embedded Kafka broker
+- sends Kafka events
+- listens to Kafka output topics
+- counts received messages
+- verifies asynchronous message delivery
 
-starts Spring Boot
-starts an embedded Kafka broker
-sends Kafka events
-listens to Kafka output topics
-counts received messages
-verifies asynchronous message delivery
+The **listener-only tests** are correct and useful.
 
-The listener-only tests are correct and useful.
+The **main flow** test is currently incomplete because it sends the input event but does not check the resulting output events.
 
-The main flow test is currently incomplete because it sends the input event but does not check the resulting output events.
-
-Recommended final version of the main flow test
+**Recommended final version of the main flow test**
+```java
 @Test
 public void testOrderDispatchFlow() throws Exception {
     OrderCreated orderCreated =
@@ -923,17 +927,23 @@ public void testOrderDispatchFlow() throws Exception {
     await().atMost(5, TimeUnit.SECONDS)
             .until(testListener.orderDispatchedCounter::get, equalTo(1));
 }
-Final takeaway
-This class mainly demonstrates
-Spring Boot integration testing
-Kafka integration testing with embedded Kafka
-listener readiness handling
-asynchronous verification with Awaitility
-end-to-end event flow validation
-Most important improvement
 
-Make testOrderDispatchFlow() actually assert the expected downstream Kafka outputs.
+```
+
+### Final takeaway
+
+**This class mainly demonstrates**
+- Spring Boot integration testing
+- Kafka integration testing with embedded Kafka
+- listener readiness handling
+- asynchronous verification with Awaitility
+- end-to-end event flow validation
+
+**Most important improvement**
+
+Make `testOrderDispatchFlow()` actually assert the expected downstream Kafka outputs.
 
 That is what turns it into a true integration test of the dispatch flow.
 
-If you want, I can also convert this into a line-by-line explanation table with columns like Code | Meaning | Why used | Important note.
+
+![alt text](image.png)
