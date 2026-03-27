@@ -6,6 +6,7 @@ what Disrupts Ordering?
 How to Guarantee Ordering?
 Keys
 
+where to use this example of 
 
 @Header
 - KafkaHeaders.RECEIVED_KEY
@@ -15,22 +16,6 @@ Keys
 
 
 Testing:
-
-Run 2 application: Stop it
-- run Application (App1)
-    mvn spring-boot:run
-
-- run Application (App2)
-    mvn spring-boot:run    
-- Check in console at last there will find different group id
-
-
-# Consumer running
-- kafka-console-consumer --bootstrap-server localhost:9092 --topic order.dispatched
-
-# Producer running
-- kafka-console-producer --bootstrap-server localhost:9092 --topic order.created
->{"orderId":"550e8400-e29b-41d4-a716-446655440000","item":"book-6"} 
 
 
 # Consuming Keyed Messages
@@ -56,6 +41,11 @@ Run 2 application: Stop it
 >"123":{"orderId":"550e8400-e29b-41d4-a716-446655440000","item":"book-7"} 
 
 Check application console
+
+Describe partition
+```bash
+bin/kafka-topics.sh --bootstarp-server localhost:9092 --describe --topic order.created
+```
 
 ---------
 
@@ -89,7 +79,7 @@ Run 2 application: Stop it
 - run Application (App2)
  groupId = "dispatch.order.created.consumer2",
     mvn spring-boot:run    
-- Check in console at last there will find different partition
+- Check in console at last there will find different partition and group id
 
 
 

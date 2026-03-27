@@ -750,34 +750,150 @@ Monitor tool for Kafka
 
 --- 
 
-PlantUML diagram
+![alt text](image-1.png)
+
+### What this diagram shows
+
+- **Producer** sends messages to the **orders** topic.
+- The topic has **4 partitions**.
+- Inside **one consumer group**, partitions are split across consumers.
+- This gives **parallel processing** and **scaling**.
+- The **Group Coordinator** handles:
+    - membership
+    - heartbeat checks
+    - rebalance
+    - failover
+- A **different consumer** group can read the same topic independently.
+- If one consumer fails, Kafka does **failover + rebalance**.
+
+### Quick meaning of each part
+
+**Shared consumer group**
+
+Consumers `C1`, `C2`, and `C3` are in the same group, so they share the partitions.
+
+**Heartbeating**
+
+Each consumer sends heartbeat messages to the coordinator to say, **"I am alive."**
+
+**Rebalancing**
+
+If a new consumer joins or one fails, `Kafka` redistributes partitions.
+
+**Duplicate consumption**
+
+Inside the **same group**, duplicates do not normally happen for the same partition at the same time.
+Across **different groups**, the same message is consumed again, which is normal.
+
+# Kafka Consumer Groups — Professional PlantUML Diagrams
+
+Below are **two colorful PlantUML diagrams**:
+
+1. **Sequence Diagram** for heartbeat and rebalance flow  
+2. **Professional System Diagram** with remarks and color legend
+
+---
+
+## 1. Sequence Diagram — Heartbeat and Rebalance Flow
+
+![alt text](image-2.png)
+
+## 2. Professional System Diagram — Consumer Groups with Remarks and Color Legend
+
+![alt text](image-3.png)
+
+------
 
 
-- https://github.com/lydtechconsulting/introduction-to-kafka-with-spring-boot/blob/09-consumer-groups/src/main/java/dev/lydtech/dispatch/message/OrderDispatched.java
+# Testing:
 
-- https://github.com/lydtechconsulting/introduction-to-kafka-with-spring-boot/blob/09-consumer-groups/src/main/java/dev/lydtech/dispatch/service/DispatchService.java
+##  Testing Notes — Shared Consumer Kafka Consumer Group Behavior
+
+## 1. Start Two Application Instances
+
+Run two instances of the same Spring Boot application to observe consumer group behavior.
+
+### Run first application (App)
+
+```bash
+mvn spring-boot:run
+```
+Console output:
+```bash
+dispatch.order.created.consumer: partitions assigned: []
+```
+Comment:
+- No partition assigned yet.
+- Consumer is waiting for partition assignment.
+
+### Run second application (App2)
+```bash
+mvn spring-boot:run
+```
+
+Console output:
+```bash
+dispatch.order.created.consumer: partitions assigned: [order.created-0]
+```
+Comment:
+- Topic currently has only **one partition**
+- Kafka assigns the partition to only **one consumer in the group**
+- Other consumer remains idle
+
+Important note:
+> In a consumer group, one partition can be consumed by only one consumer.
+
+Check logs carefully:
+- Each application instance has a different client id
+- Both share the same group id
+- Partition assigned to only one consumer
+
+### 2. Run Kafka Console Consumer
+
+Use console consumer to monitor messages from the output topic.
+
+```bash
+kafka-console-consumer \
+--bootstrap-server localhost:9092 \
+--topic order.dispatched
+```
+
+Comment:
+- This consumer listens to dispatched orders
+- Useful to verify processing result
+
+### 3. Run Kafka Console Producer
+
+Send test message to input topic.
+```bash
+kafka-console-producer \
+--bootstrap-server localhost:9092 \
+--topic order.created
+```
+Send message:
+```json
+{"orderId":"550e8400-e29b-41d4-a716-446655440000","item":"book-5"}
+```
+Comment:
+- Message is produced to `order.created`
+- Only one consumer in the group processes it
+- Result should appear in `order.dispatched`
+
+### 4. Observation
+| Scenario           | Result                                |
+| ------------------ | ------------------------------------- |
+| One partition      | Only one consumer active              |
+| Multiple consumers | Idle consumers if no extra partitions |
+| Same group id      | Shared consumption                    |
+| Different group id | Duplicate consumption                 |
+| Console consumer   | Used for verification                 |
+| Console producer   | Used for testing                      |
 
 
-Testing:
-
-Run 2 application:
-- run Application (App)
-    mvn spring-boot:run
-
-- run Application (App2)
-    mvn spring-boot:run    
-- Check in console at last there will find different group id
 
 
-# Consumer running
-- kafka-console-consumer --bootstrap-server localhost:9092 --topic order.dispatched
 
-# Producer running
-- kafka-console-producer --bootstrap-server localhost:9092 --topic order.created
->{"orderId":"550e8400-e29b-41d4-a716-446655440000","item":"book-5"} 
-
-
-# Demo Consumer Failover
+# Kafka Failover Consumer Failover ( Fault tolerance )
 
 Testing:
 
@@ -798,15 +914,18 @@ Run 2 application: Stop it
 >{"orderId":"550e8400-e29b-41d4-a716-446655440000","item":"book-6"} 
 
 
-# Duplicate Consumption
+#  Kafka Duplicate Consumption
+
+
 
 
 Testing:
 
-Run 2 application: Stop it
+Run 2 application:
 - run Application (App1)
     mvn spring-boot:run
 
+- Modify group id 
 - https://github.com/lydtechconsulting/introduction-to-kafka-with-spring-boot/blob/09-consumer-groups/src/main/java/dev/lydtech/dispatch/handler/OrderCreatedHandler.java
 - run Application (App2)
  groupId = "dispatch.order.created.consumer2",
@@ -822,4 +941,6 @@ Run 2 application: Stop it
 >{"orderId":"550e8400-e29b-41d4-a716-446655440000","item":"book-7"} 
 
 proceessByID
+
+In both App1 and App2  both consumer accept with different processById. at the in both Application
 
