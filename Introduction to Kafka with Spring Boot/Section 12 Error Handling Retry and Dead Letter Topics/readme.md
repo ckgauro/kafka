@@ -18,7 +18,9 @@ WireMock Overview
 
 - https://github.com/lydtechconsulting/introduction-to-kafka-with-spring-boot/blob/12-retry/src/main/java/dev/lydtech/dispatch/client/StockServiceClient.java
 
-
+```bash
+kafka-console-consumer --bootstrap-server kafka1:9092 --topic order.created>DLT --property.key= true --property.value=true
+```
 
 mvn clean test 
 
