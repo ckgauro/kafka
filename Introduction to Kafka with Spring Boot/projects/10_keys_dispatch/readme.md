@@ -18,15 +18,15 @@ dispatch.order.created.consumer: partitions assigned: []
 
 
 # Consumer running
-- kafka-console-consumer --bootstrap-server localhost:9092 --topic order.dispatched --property print.key=true --property key.separator=:
+- kafka-console-consumer --bootstrap-server kafka1:9092 --topic order.dispatched --property print.key=true --property key.separator=:
 
 # Producer running
-- kafka-console-producer --bootstrap-server localhost:9092 --topic order.created --property parse.key=true -- property key.separator=:
+kafka-console-producer --bootstrap-server kafka1:9092 --topic order.created --property parse.key=true --property key.separator=:
 >"456":{"orderId":"550e8400-e29b-41d4-a716-446655440000","item":"book-456"} 
 
 Check application console
 
->"456":{"orderId":"550e8400-e29b-41d4-a716-446655440001","item":"book-456"} 
+>Sent messages: key: 456  - orderId:550e8400-e29b-41d4-a716-446655440000 - processedById :f5d0d044-8ea3-405f-b25e-b59392fa764a
 
 
 
