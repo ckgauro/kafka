@@ -19,19 +19,19 @@ public class OrderCreateHandler {
 
 
     @KafkaListener(
-            id="orderConsumerClient",
-            topics="order.created",
+            id = "orderConsumerClient",
+            topics = "order.created",
             groupId = "dispatch.order.created.consumer",
             containerFactory = "kafkaListenerContainerFactory"
     )
-    public void listen(@Header(KafkaHeaders.RECEIVED_PARTITION) Integer partition ,
-            @Header(KafkaHeaders.RECEIVED_KEY) String key
-            , @Payload OrderCreated payload) throws Exception{
-        log.info("Received message: partition: {} - key: {} - payload: {}",partition,key, payload);
-        try{
-            dispatchService.process(key,payload);
-        }catch (Exception e){
-            log.error("Processing failure : {}",e);
+    public void listen(@Header(KafkaHeaders.RECEIVED_PARTITION) Integer partition,
+                       @Header(KafkaHeaders.RECEIVED_KEY) String key,
+                       @Payload OrderCreated payload) throws Exception {
+        log.info("Received message: partition: {} - key: {} - payload: {}", partition, key, payload);
+        try {
+            dispatchService.process(key, payload);
+        } catch (Exception e) {
+            log.error("Processing failure : {}", e);
         }
     }
 }
