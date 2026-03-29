@@ -1,4 +1,4 @@
-package com.idempotent.idemotent;
+package com.mockservices;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -6,10 +6,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
-public class IdemotentApplication {
+public class MockserviceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(IdemotentApplication.class, args);
+		SpringApplication.run(MockserviceApplication.class, args);
 	}
 
 	@Bean

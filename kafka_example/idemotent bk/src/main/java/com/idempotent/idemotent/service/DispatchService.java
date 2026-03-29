@@ -1,23 +1,14 @@
 package com.idempotent.idemotent.service;
 
 import com.idempotent.idemotent.entity.ProcessedEventEntity;
-import com.idempotent.idemotent.error.NotRetryableException;
-import com.idempotent.idemotent.error.RetryableException;
 import com.idempotent.idemotent.message.OrderCreated;
 import com.idempotent.idemotent.message.OrderDispatched;
 import com.idempotent.idemotent.repository.ProcessedEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
-
 
 import java.util.UUID;
 
@@ -29,7 +20,6 @@ import static java.util.UUID.randomUUID;
 public class DispatchService {
 
     private final ProcessedEventRepository processedEventRepository;
-    private final RestTemplate restTemplate;
 
     private static final String ORDER_DISPATCHED_TOPIC = "order.dispatched";
     private static final UUID APPLICATION_ID = randomUUID();
@@ -43,35 +33,14 @@ public class DispatchService {
             log.info("Found a duplicate message id: {}", processedEventEntity.getMessageId());
             return;
         }
-
-        String requestUrl = "http://localhost:8082/response/200";
-
-       // String requestUrl = "http://localhost:8082/response/500";
-
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(requestUrl, HttpMethod.GET, null, String.class);
-
-            if (response.getStatusCode().value() == HttpStatus.OK.value()) {
-                log.info("Received response from a remote service: " + response.getBody());
-            }
-        } catch (ResourceAccessException ex) {
-            log.error("RetryableException ==>{} ",ex.getMessage());
-            throw new RetryableException(ex);
-        } catch (HttpServerErrorException ex) {
-            log.error("NotRetryableException  ===>{}",ex.getMessage());
-            throw new NotRetryableException(ex);
-        } catch (Exception ex) {
-            log.error(ex.getMessage());
-            throw new NotRetryableException(ex);
-        }
         try {
             processedEventRepository.save(ProcessedEventEntity.builder()
                     .messageId(key)
                     .orderId(orderCreated.getOrderId().toString())
                     .build());
         } catch (DataIntegrityViolationException ex) {
-             throw new NotRetryableException(ex);
-            //throw new RuntimeException("DataIntegrityViolationException error ");
+            // throw new NotRetryableException(ex);
+            throw new RuntimeException("DataIntegrityViolationException error ");
         }
 
         OrderDispatched orderDispatched = OrderDispatched.builder()

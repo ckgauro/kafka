@@ -28,6 +28,10 @@ public class OrderCreateHandler {
                        @Header(KafkaHeaders.RECEIVED_KEY) String key,
                        @Payload OrderCreated payload) throws Exception {
         log.info("Received message: partition: {} - key: {} - payload: {}", partition, key, payload);
-        dispatchService.process(key, payload);
+        try {
+            dispatchService.process(key, payload);
+        } catch (Exception e) {
+            log.error("Processing failure : {}", e);
+        }
     }
 }

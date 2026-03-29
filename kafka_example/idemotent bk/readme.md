@@ -16,18 +16,3 @@ input json
 ```bash 
 kafka-console-consumer --bootstrap-server kafka1:9092 --topic order.dispatched --property parse.key=true --property key.separator=:
 ```
-
-"7":{"orderId":"550e8400-e29b-41d4-a716-446655440001","item":"book-7"}
-
-# By default Spring-boot creates 
-```bash
-
-kafka-topics --bootstrap-server kafka1:9092 --create --topic order.created.DLT --partitions 1 --replication-factor 1
-
-```
-
-# to view DLT value
-```bash
-kafka-console-consumer --bootstrap-server localhost:9092 --topic order.created.DLT --from-beginning --property print.headers=true --property print.key=true --property key.separator=" | "
-
-```

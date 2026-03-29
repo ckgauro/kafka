@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: idemotent
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=kafkadb&ssl=false #change this to your database url
+    password: oracle #change this to your database username
+    username: postgres #change this to your database password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+  kafka:
+    bootstrap-servers: localhost:9092
