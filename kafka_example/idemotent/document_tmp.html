@@ -1,0 +1,2752 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title><pre c</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<pre class="hljs"><code><div>
+<span class="hljs-meta">@Slf</span>4j
+<span class="hljs-meta">@EnableKafka</span>
+<span class="hljs-meta">@Configuration</span>
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DispatchConfiguration</span> </span>{
+
+    <span class="hljs-meta">@Bean</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> ConcurrentKafkaListenerContainerFactory&lt;String, OrderCreated&gt; <span class="hljs-title">kafkaListenerContainerFactory</span><span class="hljs-params">(
+            ConsumerFactory&lt;String, OrderCreated&gt; consumerFactory,
+            KafkaTemplate&lt;String, Object&gt; kafkaTemplate)</span> </span>{
+
+        DeadLetterPublishingRecoverer recoverer = <span class="hljs-keyword">new</span> DeadLetterPublishingRecoverer(
+                kafkaTemplate,
+                (record, ex) -&gt; {
+                    String dltTopic = record.topic() + <span class="hljs-string">".DLT"</span>;
+
+                    <span class="hljs-keyword">if</span> (ex <span class="hljs-keyword">instanceof</span> NotRetryableException) {
+                        log.error(
+                                <span class="hljs-string">"NOT_RETRYABLE -&gt; sending to DLT. topic={}, key={}, partition={}, offset={}, dltTopic={}, cause={}"</span>,
+                                record.topic(), record.key(), record.partition(), record.offset(), dltTopic, ex.getMessage()
+                        );
+                    } <span class="hljs-keyword">else</span> {
+                        log.error(
+                                <span class="hljs-string">"RETRIES_EXHAUSTED -&gt; sending to DLT. topic={}, key={}, partition={}, offset={}, dltTopic={}, cause={}"</span>,
+                                record.topic(), record.key(), record.partition(), record.offset(), dltTopic, ex.getMessage()
+                        );
+                    }
+
+                    <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> TopicPartition(dltTopic, record.partition());
+                }
+        );
+
+        DefaultErrorHandler errorHandler =
+                <span class="hljs-keyword">new</span> DefaultErrorHandler(recoverer, <span class="hljs-keyword">new</span> FixedBackOff(<span class="hljs-number">5000L</span>, <span class="hljs-number">3L</span>));
+
+        errorHandler.addNotRetryableExceptions(NotRetryableException<span class="hljs-class">.<span class="hljs-keyword">class</span>)</span>;
+        errorHandler.addRetryableExceptions(RetryableException<span class="hljs-class">.<span class="hljs-keyword">class</span>)</span>;
+
+        errorHandler.setRetryListeners(<span class="hljs-keyword">new</span> RetryListener() {
+            <span class="hljs-meta">@Override</span>
+            <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">failedDelivery</span><span class="hljs-params">(org.apache.kafka.clients.consumer.ConsumerRecord&lt;?, ?&gt; record,
+                                       Exception ex,
+                                       <span class="hljs-keyword">int</span> deliveryAttempt)</span> </span>{
+                log.warn(
+                        <span class="hljs-string">"RETRY_ATTEMPT topic={}, key={}, partition={}, offset={}, attempt={}, exception={}"</span>,
+                        record.topic(), record.key(), record.partition(), record.offset(),
+                        deliveryAttempt, ex.getClass().getSimpleName()
+                );
+            }
+
+            <span class="hljs-meta">@Override</span>
+            <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">recovered</span><span class="hljs-params">(org.apache.kafka.clients.consumer.ConsumerRecord&lt;?, ?&gt; record,
+                                  Exception ex)</span> </span>{
+                log.error(
+                        <span class="hljs-string">"RECOVERED_TO_DLT topic={}, key={}, partition={}, offset={}, exception={}"</span>,
+                        record.topic(), record.key(), record.partition(), record.offset(),
+                        ex.getClass().getSimpleName()
+                );
+            }
+
+            <span class="hljs-meta">@Override</span>
+            <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">recoveryFailed</span><span class="hljs-params">(org.apache.kafka.clients.consumer.ConsumerRecord&lt;?, ?&gt; record,
+                                       Exception original,
+                                       Exception failure)</span> </span>{
+                log.error(
+                        <span class="hljs-string">"DLT_PUBLISH_FAILED topic={}, key={}, partition={}, offset={}, originalException={}, recovererException={}"</span>,
+                        record.topic(), record.key(), record.partition(), record.offset(),
+                        original.getClass().getSimpleName(), failure.getClass().getSimpleName(),
+                        failure
+                );
+            }
+        });
+
+        ConcurrentKafkaListenerContainerFactory&lt;String, OrderCreated&gt; factory =
+                <span class="hljs-keyword">new</span> ConcurrentKafkaListenerContainerFactory&lt;&gt;();
+        factory.setConsumerFactory(consumerFactory);
+        factory.setCommonErrorHandler(errorHandler);
+
+        <span class="hljs-keyword">return</span> factory;
+    }
+
+    <span class="hljs-meta">@Bean</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> ConsumerFactory&lt;String, OrderCreated&gt; <span class="hljs-title">consumerFactory</span><span class="hljs-params">(
+            @Value(<span class="hljs-string">"${spring.kafka.bootstrap-servers}"</span>)</span> String bootstrapServers) </span>{
+
+        Map&lt;String, Object&gt; config = <span class="hljs-keyword">new</span> HashMap&lt;&gt;();
+        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer<span class="hljs-class">.<span class="hljs-keyword">class</span>)</span>;
+        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer<span class="hljs-class">.<span class="hljs-keyword">class</span>)</span>;
+        config.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JacksonJsonDeserializer<span class="hljs-class">.<span class="hljs-keyword">class</span>)</span>;
+        config.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE, OrderCreated<span class="hljs-class">.<span class="hljs-keyword">class</span>.<span class="hljs-title">getCanonicalName</span>())</span>;
+        config.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, <span class="hljs-string">"dev.lydtech.dispatch.message"</span>);
+        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, <span class="hljs-string">"earliest"</span>);
+
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> DefaultKafkaConsumerFactory&lt;&gt;(config);
+    }
+
+    <span class="hljs-meta">@Bean</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> ProducerFactory&lt;String, Object&gt; <span class="hljs-title">producerFactory</span><span class="hljs-params">(
+            @Value(<span class="hljs-string">"${spring.kafka.bootstrap-servers}"</span>)</span> String bootstrapServers) </span>{
+
+        Map&lt;String, Object&gt; config = <span class="hljs-keyword">new</span> HashMap&lt;&gt;();
+        config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer<span class="hljs-class">.<span class="hljs-keyword">class</span>)</span>;
+        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JacksonJsonSerializer<span class="hljs-class">.<span class="hljs-keyword">class</span>)</span>;
+
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> DefaultKafkaProducerFactory&lt;&gt;(config);
+    }
+
+    <span class="hljs-meta">@Bean</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> KafkaTemplate&lt;String, Object&gt; <span class="hljs-title">kafkaTemplate</span><span class="hljs-params">(
+            ProducerFactory&lt;String, Object&gt; producerFactory)</span> </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> KafkaTemplate&lt;&gt;(producerFactory);
+    }
+}
+</div></code></pre>
+<h1 id="dispatchconfiguration-summary">DispatchConfiguration Summary</h1>
+<h2 id="overview">Overview</h2>
+<p>This configuration class sets up Kafka consumer and producer components for the <code>dispatch</code> service.</p>
+<p>It mainly does 4 things:</p>
+<ol>
+<li>Creates a <strong>Kafka listener container factory</strong></li>
+<li>Configures <strong>error handling with retries and DLT</strong></li>
+<li>Configures the <strong>consumer factory</strong></li>
+<li>Configures the <strong>producer factory and KafkaTemplate</strong></li>
+</ol>
+<hr>
+<h2 id="1-class-level-annotation-summary">1. Class-Level Annotation Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Annotation</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@Slf4j</code></td>
+<td>Adds logger support for logging retry, recovery, and DLT events</td>
+</tr>
+<tr>
+<td><code>@EnableKafka</code></td>
+<td>Enables Kafka listener support in Spring</td>
+</tr>
+<tr>
+<td><code>@Configuration</code></td>
+<td>Marks this class as a Spring configuration class</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="2-bean-summary-table">2. Bean Summary Table</h2>
+<table>
+<thead>
+<tr>
+<th>Bean Name</th>
+<th>Return Type</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kafkaListenerContainerFactory</code></td>
+<td><code>ConcurrentKafkaListenerContainerFactory&lt;String, OrderCreated&gt;</code></td>
+<td>Creates Kafka listener containers with custom error handling</td>
+</tr>
+<tr>
+<td><code>consumerFactory</code></td>
+<td><code>ConsumerFactory&lt;String, OrderCreated&gt;</code></td>
+<td>Defines how Kafka consumers are created and how messages are deserialized</td>
+</tr>
+<tr>
+<td><code>producerFactory</code></td>
+<td><code>ProducerFactory&lt;String, Object&gt;</code></td>
+<td>Defines how Kafka producers are created and how messages are serialized</td>
+</tr>
+<tr>
+<td><code>kafkaTemplate</code></td>
+<td><code>KafkaTemplate&lt;String, Object&gt;</code></td>
+<td>Used to publish messages to Kafka, including DLT messages</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="3-kafka-listener-container-factory-summary">3. Kafka Listener Container Factory Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Consumer type</td>
+<td><code>String</code> key and <code>OrderCreated</code> value</td>
+</tr>
+<tr>
+<td>Consumer factory used</td>
+<td><code>consumerFactory</code></td>
+</tr>
+<tr>
+<td>Error handler used</td>
+<td><code>DefaultErrorHandler</code></td>
+</tr>
+<tr>
+<td>DLT publishing</td>
+<td>Enabled through <code>DeadLetterPublishingRecoverer</code></td>
+</tr>
+<tr>
+<td>Retry strategy</td>
+<td><code>FixedBackOff(5000L, 3L)</code></td>
+</tr>
+<tr>
+<td>Retry interval</td>
+<td>5 seconds</td>
+</tr>
+<tr>
+<td>Retry attempts</td>
+<td>3 retries</td>
+</tr>
+<tr>
+<td>Final action after retries fail</td>
+<td>Send record to <code>&lt;original-topic&gt;.DLT</code></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="4-error-handling-flow-summary">4. Error Handling Flow Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>What Happens</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Consumer reads message from Kafka topic</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Listener processes the message</td>
+</tr>
+<tr>
+<td>3</td>
+<td>If processing succeeds, offset is committed normally</td>
+</tr>
+<tr>
+<td>4</td>
+<td>If <code>RetryableException</code> occurs, Spring Kafka retries</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Retry happens every 5 seconds</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Maximum 3 retry attempts are made</td>
+</tr>
+<tr>
+<td>7</td>
+<td>If retries are exhausted, message is sent to DLT</td>
+</tr>
+<tr>
+<td>8</td>
+<td>If <code>NotRetryableException</code> occurs, message goes directly to DLT</td>
+</tr>
+<tr>
+<td>9</td>
+<td>If DLT publishing itself fails, error is logged</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="5-dead-letter-topic-dlt-summary">5. Dead Letter Topic (DLT) Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DLT naming rule</td>
+<td>Original topic name + <code>.DLT</code></td>
+</tr>
+<tr>
+<td>Example</td>
+<td><code>order.created</code> → <code>order.created.DLT</code></td>
+</tr>
+<tr>
+<td>Partition used</td>
+<td>Same partition as original record</td>
+</tr>
+<tr>
+<td>Publisher</td>
+<td><code>DeadLetterPublishingRecoverer</code> using <code>KafkaTemplate</code></td>
+</tr>
+<tr>
+<td>When used</td>
+<td>For non-retryable exceptions or exhausted retries</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="6-exception-handling-summary">6. Exception Handling Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Exception Type</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>RetryableException</code></td>
+<td>Message is retried up to 3 times with 5-second delay</td>
+</tr>
+<tr>
+<td><code>NotRetryableException</code></td>
+<td>Message is sent directly to DLT without retry</td>
+</tr>
+<tr>
+<td>Other exceptions</td>
+<td>Handled by default error handler and may go through retry/recovery flow depending on classification</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="7-retry-listener-summary">7. Retry Listener Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>When It Runs</th>
+<th>Log Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>failedDelivery(...)</code></td>
+<td>On every failed retry attempt</td>
+<td>Logs retry attempt details</td>
+</tr>
+<tr>
+<td><code>recovered(...)</code></td>
+<td>When record is successfully recovered to DLT</td>
+<td>Logs that message was moved to DLT</td>
+</tr>
+<tr>
+<td><code>recoveryFailed(...)</code></td>
+<td>If publishing to DLT fails</td>
+<td>Logs DLT publication failure</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="8-log-message-summary-table">8. Log Message Summary Table</h2>
+<table>
+<thead>
+<tr>
+<th>Log Message</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NOT_RETRYABLE -&gt; sending to DLT</code></td>
+<td>A non-retryable exception occurred, so record is sent straight to DLT</td>
+</tr>
+<tr>
+<td><code>RETRIES_EXHAUSTED -&gt; sending to DLT</code></td>
+<td>All retry attempts failed, so record is sent to DLT</td>
+</tr>
+<tr>
+<td><code>RETRY_ATTEMPT</code></td>
+<td>A retry attempt is happening</td>
+</tr>
+<tr>
+<td><code>RECOVERED_TO_DLT</code></td>
+<td>Record has been successfully published to DLT</td>
+</tr>
+<tr>
+<td><code>DLT_PUBLISH_FAILED</code></td>
+<td>Kafka failed while trying to publish record to DLT</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="9-consumer-factory-summary">9. Consumer Factory Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Config Key</th>
+<th>Value</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BOOTSTRAP_SERVERS_CONFIG</code></td>
+<td><code>${spring.kafka.bootstrap-servers}</code></td>
+<td>Kafka broker address</td>
+</tr>
+<tr>
+<td><code>KEY_DESERIALIZER_CLASS_CONFIG</code></td>
+<td><code>StringDeserializer.class</code></td>
+<td>Deserializes Kafka message key</td>
+</tr>
+<tr>
+<td><code>VALUE_DESERIALIZER_CLASS_CONFIG</code></td>
+<td><code>ErrorHandlingDeserializer.class</code></td>
+<td>Wraps value deserialization errors safely</td>
+</tr>
+<tr>
+<td><code>ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS</code></td>
+<td><code>JacksonJsonDeserializer.class</code></td>
+<td>JSON deserializer for message value</td>
+</tr>
+<tr>
+<td><code>JacksonJsonDeserializer.VALUE_DEFAULT_TYPE</code></td>
+<td><code>OrderCreated.class.getCanonicalName()</code></td>
+<td>Converts JSON payload into <code>OrderCreated</code></td>
+</tr>
+<tr>
+<td><code>JacksonJsonDeserializer.TRUSTED_PACKAGES</code></td>
+<td><code>dev.lydtech.dispatch.message</code></td>
+<td>Trusted package for deserialization</td>
+</tr>
+<tr>
+<td><code>AUTO_OFFSET_RESET_CONFIG</code></td>
+<td><code>earliest</code></td>
+<td>Reads from earliest offset if no committed offset exists</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="10-why-errorhandlingdeserializer-is-used">10. Why <code>ErrorHandlingDeserializer</code> Is Used</h2>
+<table>
+<thead>
+<tr>
+<th>Reason</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Safer deserialization</td>
+<td>Prevents consumer from crashing badly on malformed JSON</td>
+</tr>
+<tr>
+<td>Better error handling</td>
+<td>Lets Spring Kafka pass deserialization problems to the error handler</td>
+</tr>
+<tr>
+<td>DLT support</td>
+<td>Bad messages can also be routed into recovery flow</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="11-producer-factory-summary">11. Producer Factory Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Config Key</th>
+<th>Value</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BOOTSTRAP_SERVERS_CONFIG</code></td>
+<td><code>${spring.kafka.bootstrap-servers}</code></td>
+<td>Kafka broker address</td>
+</tr>
+<tr>
+<td><code>KEY_SERIALIZER_CLASS_CONFIG</code></td>
+<td><code>StringSerializer.class</code></td>
+<td>Serializes message key as string</td>
+</tr>
+<tr>
+<td><code>VALUE_SERIALIZER_CLASS_CONFIG</code></td>
+<td><code>JacksonJsonSerializer.class</code></td>
+<td>Serializes Java object to JSON</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="12-kafkatemplate-summary">12. KafkaTemplate Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bean name</td>
+<td><code>kafkaTemplate</code></td>
+</tr>
+<tr>
+<td>Type</td>
+<td><code>KafkaTemplate&lt;String, Object&gt;</code></td>
+</tr>
+<tr>
+<td>Uses</td>
+<td><code>producerFactory</code></td>
+</tr>
+<tr>
+<td>Purpose</td>
+<td>Sends Kafka messages, including DLT messages</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="13-end-to-end-processing-summary">13. End-to-End Processing Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Component</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>ConsumerFactory</td>
+<td>Creates Kafka consumer</td>
+</tr>
+<tr>
+<td>2</td>
+<td>ListenerContainerFactory</td>
+<td>Creates listener container</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Kafka Listener</td>
+<td>Receives <code>OrderCreated</code> messages</td>
+</tr>
+<tr>
+<td>4</td>
+<td>DefaultErrorHandler</td>
+<td>Handles failures</td>
+</tr>
+<tr>
+<td>5</td>
+<td>RetryListener</td>
+<td>Logs retry and recovery events</td>
+</tr>
+<tr>
+<td>6</td>
+<td>DeadLetterPublishingRecoverer</td>
+<td>Publishes failed messages to DLT</td>
+</tr>
+<tr>
+<td>7</td>
+<td>ProducerFactory + KafkaTemplate</td>
+<td>Sends DLT message to Kafka</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="14-key-design-benefits">14. Key Design Benefits</h2>
+<table>
+<thead>
+<tr>
+<th>Benefit</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reliability</td>
+<td>Failed messages are not lost</td>
+</tr>
+<tr>
+<td>Observability</td>
+<td>Detailed logs for retry, recovery, and DLT failures</td>
+</tr>
+<tr>
+<td>Fault tolerance</td>
+<td>Retryable failures get multiple chances</td>
+</tr>
+<tr>
+<td>Clean separation</td>
+<td>Consumer, producer, retry, and DLT logic are clearly separated</td>
+</tr>
+<tr>
+<td>Safe recovery</td>
+<td>Poison messages can be isolated in DLT</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="15-important-practical-notes">15. Important Practical Notes</h2>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DLT topic creation</td>
+<td>The <code>.DLT</code> topic should exist, unless broker auto-topic creation is enabled</td>
+</tr>
+<tr>
+<td>Partition mapping</td>
+<td>DLT uses the same partition as original message</td>
+</tr>
+<tr>
+<td>Retry count meaning</td>
+<td><code>FixedBackOff(5000L, 3L)</code> means 3 retry attempts after initial failure</td>
+</tr>
+<tr>
+<td>Offset reset</td>
+<td><code>earliest</code> only matters when no committed offset exists for the consumer group</td>
+</tr>
+<tr>
+<td>Deserialization target</td>
+<td>Incoming JSON must match <code>OrderCreated</code> structure</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="16-final-summary-table">16. Final Summary Table</h2>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Main Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kafkaListenerContainerFactory()</code></td>
+<td>Sets up listener container with retry and DLT handling</td>
+</tr>
+<tr>
+<td><code>DeadLetterPublishingRecoverer</code></td>
+<td>Sends failed messages to <code>&lt;topic&gt;.DLT</code></td>
+</tr>
+<tr>
+<td><code>DefaultErrorHandler</code></td>
+<td>Controls retry and recovery behavior</td>
+</tr>
+<tr>
+<td><code>RetryListener</code></td>
+<td>Logs retry lifecycle events</td>
+</tr>
+<tr>
+<td><code>consumerFactory()</code></td>
+<td>Configures deserialization and consumer properties</td>
+</tr>
+<tr>
+<td><code>producerFactory()</code></td>
+<td>Configures serialization and producer properties</td>
+</tr>
+<tr>
+<td><code>kafkaTemplate()</code></td>
+<td>Publishes messages to Kafka</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="conclusion">Conclusion</h2>
+<p>This <code>DispatchConfiguration</code> is a <strong>robust Spring Kafka configuration</strong> for consuming <code>OrderCreated</code> events.</p>
+<p>It supports:</p>
+<ul>
+<li>JSON deserialization into <code>OrderCreated</code></li>
+<li>retry handling for temporary failures</li>
+<li>direct DLT routing for non-retryable failures</li>
+<li>detailed logging for retries and recoveries</li>
+<li>publishing failed messages into <code>&lt;topic&gt;.DLT</code></li>
+</ul>
+<p>So in simple terms, this configuration makes the Kafka consumer <strong>safe, observable, and fault tolerant</strong>.</p>
+<hr>
+<pre class="hljs"><code><div><span class="hljs-meta">@Slf</span>4j
+<span class="hljs-meta">@RequiredArgsConstructor</span>
+<span class="hljs-meta">@Component</span>
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">OrderCreateHandler</span> </span>{
+
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> DispatchService dispatchService;
+
+
+    <span class="hljs-meta">@KafkaListener</span>(
+            id = <span class="hljs-string">"orderConsumerClient"</span>,
+            topics = <span class="hljs-string">"order.created"</span>,
+            groupId = <span class="hljs-string">"dispatch.order.created.consumer"</span>,
+            containerFactory = <span class="hljs-string">"kafkaListenerContainerFactory"</span>
+    )
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">listen</span><span class="hljs-params">(@Header(KafkaHeaders.RECEIVED_PARTITION)</span> Integer partition,
+                       @<span class="hljs-title">Header</span><span class="hljs-params">(KafkaHeaders.RECEIVED_KEY)</span> String key,
+                       @Payload OrderCreated payload) <span class="hljs-keyword">throws</span> Exception </span>{
+        log.info(<span class="hljs-string">"Received message: partition: {} - key: {} - payload: {}"</span>, partition, key, payload);
+        dispatchService.process(key, payload);
+    }
+}
+
+</div></code></pre>
+<h1 id="ordercreatehandler--summary-tables">OrderCreateHandler — Summary Tables</h1>
+<h2 id="overview">Overview</h2>
+<p>This class is a Kafka consumer that listens to the <code>order.created</code> topic<br>
+and delegates processing to <code>DispatchService</code>.</p>
+<hr>
+<h2 id="1-class-level-annotation-summary">1. Class-Level Annotation Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Annotation</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@Slf4j</code></td>
+<td>Enables logging</td>
+</tr>
+<tr>
+<td><code>@RequiredArgsConstructor</code></td>
+<td>Auto-generates constructor for dependency injection</td>
+</tr>
+<tr>
+<td><code>@Component</code></td>
+<td>Registers this class as a Spring bean</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="2-dependency-summary">2. Dependency Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Dependency</th>
+<th>Type</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dispatchService</code></td>
+<td><code>DispatchService</code></td>
+<td>Handles business logic for processing orders</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="3-kafka-listener-configuration-summary">3. Kafka Listener Configuration Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>orderConsumerClient</code></td>
+<td>Unique identifier for the listener container</td>
+</tr>
+<tr>
+<td><code>topics</code></td>
+<td><code>order.created</code></td>
+<td>Kafka topic to consume from</td>
+</tr>
+<tr>
+<td><code>groupId</code></td>
+<td><code>dispatch.order.created.consumer</code></td>
+<td>Consumer group ID</td>
+</tr>
+<tr>
+<td><code>containerFactory</code></td>
+<td><code>kafkaListenerContainerFactory</code></td>
+<td>Uses custom factory with retry &amp; DLT handling</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="4-method-parameter-summary">4. Method Parameter Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Source</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>partition</code></td>
+<td><code>@Header(KafkaHeaders.RECEIVED_PARTITION)</code></td>
+<td>Partition number from which message was read</td>
+</tr>
+<tr>
+<td><code>key</code></td>
+<td><code>@Header(KafkaHeaders.RECEIVED_KEY)</code></td>
+<td>Kafka message key</td>
+</tr>
+<tr>
+<td><code>payload</code></td>
+<td><code>@Payload</code></td>
+<td>Message value (<code>OrderCreated</code> object)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="5-message-processing-flow">5. Message Processing Flow</h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Kafka message arrives in <code>order.created</code> topic</td>
+</tr>
+<tr>
+<td>2</td>
+<td>KafkaListener receives the message</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Partition and key extracted from headers</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Payload deserialized into <code>OrderCreated</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>Log message details</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Call <code>dispatchService.process(key, payload)</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td>If success → offset committed</td>
+</tr>
+<tr>
+<td>8</td>
+<td>If exception → handled by <code>DefaultErrorHandler</code> (retry/DLT)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="6-logging-summary">6. Logging Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Log Statement</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Received message: partition...</code></td>
+<td>Logs incoming Kafka message details for tracing</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="7-error-handling-integration">7. Error Handling Integration</h2>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Successful processing</td>
+<td>Message consumed normally</td>
+</tr>
+<tr>
+<td><code>RetryableException</code> thrown</td>
+<td>Retries happen (configured in container factory)</td>
+</tr>
+<tr>
+<td><code>NotRetryableException</code> thrown</td>
+<td>Sent directly to DLT</td>
+</tr>
+<tr>
+<td>Other exception</td>
+<td>Goes through retry → then DLT if exhausted</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="8-consumer-group-behavior">8. Consumer Group Behavior</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Consumer Group</td>
+<td><code>dispatch.order.created.consumer</code></td>
+</tr>
+<tr>
+<td>Scaling</td>
+<td>Multiple instances can run in parallel</td>
+</tr>
+<tr>
+<td>Partition Assignment</td>
+<td>Each instance gets different partitions</td>
+</tr>
+<tr>
+<td>Fault Tolerance</td>
+<td>If one instance dies, partitions reassigned</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="9-key-design-points">9. Key Design Points</h2>
+<table>
+<thead>
+<tr>
+<th>Design Aspect</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Separation of concerns</td>
+<td>Listener only receives messages, service handles logic</td>
+</tr>
+<tr>
+<td>Observability</td>
+<td>Logging includes partition, key, and payload</td>
+</tr>
+<tr>
+<td>Fault tolerance</td>
+<td>Integrated with retry + DLT via container factory</td>
+</tr>
+<tr>
+<td>Scalability</td>
+<td>Supports multiple consumers via group ID</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="10-end-to-end-flow-summary">10. End-to-End Flow Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kafka Topic</td>
+<td><code>order.created</code> provides events</td>
+</tr>
+<tr>
+<td>KafkaListener</td>
+<td>Receives and maps message</td>
+</tr>
+<tr>
+<td>OrderCreateHandler</td>
+<td>Entry point for processing</td>
+</tr>
+<tr>
+<td>DispatchService</td>
+<td>Business logic execution</td>
+</tr>
+<tr>
+<td>ErrorHandler</td>
+<td>Retry + DLT handling</td>
+</tr>
+<tr>
+<td>KafkaTemplate</td>
+<td>Publishes failed messages to DLT</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="final-summary">Final Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Class Role</td>
+<td>Kafka consumer handler</td>
+</tr>
+<tr>
+<td>Input</td>
+<td><code>OrderCreated</code> event</td>
+</tr>
+<tr>
+<td>Output</td>
+<td>Delegated to <code>DispatchService</code></td>
+</tr>
+<tr>
+<td>Failure Handling</td>
+<td>Retry + Dead Letter Topic</td>
+</tr>
+<tr>
+<td>Key Benefit</td>
+<td>Clean, scalable, fault-tolerant event processing</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<pre class="hljs"><code><div>
+
+<span class="hljs-meta">@Slf</span>4j
+<span class="hljs-meta">@RequiredArgsConstructor</span>
+<span class="hljs-meta">@Service</span>
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DispatchService</span> </span>{
+
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> ProcessedEventRepository processedEventRepository;
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> RestTemplate restTemplate;
+
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ORDER_DISPATCHED_TOPIC = <span class="hljs-string">"order.dispatched"</span>;
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> UUID APPLICATION_ID = randomUUID();
+
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> KafkaTemplate&lt;String, Object&gt; kafkaProducer;
+
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">process</span><span class="hljs-params">(String key, OrderCreated orderCreated)</span> <span class="hljs-keyword">throws</span> Exception </span>{
+
+        ProcessedEventEntity processedEventEntity = processedEventRepository.findByMessageId(key);
+        <span class="hljs-keyword">if</span> (processedEventEntity != <span class="hljs-keyword">null</span>) {
+            log.info(<span class="hljs-string">"Found a duplicate message id: {}"</span>, processedEventEntity.getMessageId());
+            <span class="hljs-keyword">return</span>;
+        }
+
+        String requestUrl = <span class="hljs-string">"http://localhost:8082/response/200"</span>;
+
+       <span class="hljs-comment">// String requestUrl = "http://localhost:8082/response/500";</span>
+
+        <span class="hljs-keyword">try</span> {
+            ResponseEntity&lt;String&gt; response = restTemplate.exchange(requestUrl, HttpMethod.GET, <span class="hljs-keyword">null</span>, String<span class="hljs-class">.<span class="hljs-keyword">class</span>)</span>;
+
+            <span class="hljs-keyword">if</span> (response.getStatusCode().value() == HttpStatus.OK.value()) {
+                log.info(<span class="hljs-string">"Received response from a remote service: "</span> + response.getBody());
+            }
+        } <span class="hljs-keyword">catch</span> (ResourceAccessException ex) {
+            log.error(<span class="hljs-string">"RetryableException ==&gt;{} "</span>,ex.getMessage());
+            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> RetryableException(ex);
+        } <span class="hljs-keyword">catch</span> (HttpServerErrorException ex) {
+            log.error(<span class="hljs-string">"NotRetryableException  ===&gt;{}"</span>,ex.getMessage());
+            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> NotRetryableException(ex);
+        } <span class="hljs-keyword">catch</span> (Exception ex) {
+            log.error(ex.getMessage());
+            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> NotRetryableException(ex);
+        }
+        <span class="hljs-keyword">try</span> {
+            processedEventRepository.save(ProcessedEventEntity.builder()
+                    .messageId(key)
+                    .orderId(orderCreated.getOrderId().toString())
+                    .build());
+        } <span class="hljs-keyword">catch</span> (DataIntegrityViolationException ex) {
+             <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> NotRetryableException(ex);
+            <span class="hljs-comment">//throw new RuntimeException("DataIntegrityViolationException error ");</span>
+        }
+
+        OrderDispatched orderDispatched = OrderDispatched.builder()
+                .orderId(orderCreated.getOrderId())
+                .processedById(APPLICATION_ID)
+                .notes(<span class="hljs-string">"Dispatched: "</span> + orderCreated.getItem())
+                .build();
+        kafkaProducer.send(ORDER_DISPATCHED_TOPIC, key, orderDispatched).get();
+        log.info(<span class="hljs-string">"Sent messages: key: {}  - orderId:{} - processedById :{}"</span>, key, orderCreated.getOrderId(), APPLICATION_ID);
+        <span class="hljs-comment">// Save a unique message id in a database table</span>
+
+
+    }
+}
+</div></code></pre>
+<h1 id="dispatchservice--summary-tables">DispatchService — Summary Tables</h1>
+<h2 id="overview">Overview</h2>
+<p><code>DispatchService</code> contains the main business logic for processing an <code>OrderCreated</code> event.</p>
+<p>It performs these steps:</p>
+<ol>
+<li>Checks whether the message is a duplicate</li>
+<li>Calls a remote service</li>
+<li>Classifies errors into retryable and non-retryable</li>
+<li>Saves the processed message in the database</li>
+<li>Publishes an <code>OrderDispatched</code> event to Kafka</li>
+</ol>
+<hr>
+<h2 id="1-class-level-annotation-summary">1. Class-Level Annotation Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Annotation</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@Slf4j</code></td>
+<td>Enables logging</td>
+</tr>
+<tr>
+<td><code>@RequiredArgsConstructor</code></td>
+<td>Auto-generates constructor for required dependencies</td>
+</tr>
+<tr>
+<td><code>@Service</code></td>
+<td>Marks this class as a Spring service bean</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="2-dependency-summary">2. Dependency Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Dependency</th>
+<th>Type</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>processedEventRepository</code></td>
+<td><code>ProcessedEventRepository</code></td>
+<td>Checks duplicates and stores processed message IDs</td>
+</tr>
+<tr>
+<td><code>restTemplate</code></td>
+<td><code>RestTemplate</code></td>
+<td>Calls external HTTP service</td>
+</tr>
+<tr>
+<td><code>kafkaProducer</code></td>
+<td><code>KafkaTemplate&lt;String, Object&gt;</code></td>
+<td>Publishes Kafka messages</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="3-field-summary">3. Field Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value / Type</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ORDER_DISPATCHED_TOPIC</code></td>
+<td><code>&quot;order.dispatched&quot;</code></td>
+<td>Kafka topic where processed event is sent</td>
+</tr>
+<tr>
+<td><code>APPLICATION_ID</code></td>
+<td><code>randomUUID()</code></td>
+<td>Unique ID for this service instance</td>
+</tr>
+<tr>
+<td><code>kafkaProducer</code></td>
+<td><code>KafkaTemplate&lt;String, Object&gt;</code></td>
+<td>Sends message to Kafka</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="4-method-summary">4. Method Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Input</th>
+<th>Output</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>process(String key, OrderCreated orderCreated)</code></td>
+<td>Kafka key and <code>OrderCreated</code> payload</td>
+<td><code>void</code></td>
+<td>Processes an incoming order event</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="5-end-to-end-processing-flow">5. End-to-End Processing Flow</h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Action</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Check if <code>messageId</code> already exists in DB</td>
+<td>Prevent duplicate processing</td>
+</tr>
+<tr>
+<td>2</td>
+<td>If duplicate found</td>
+<td>Log and return</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Call external REST endpoint</td>
+<td>Validate or trigger downstream work</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Handle remote call exceptions</td>
+<td>Convert to retryable or non-retryable exceptions</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Save processed event into DB</td>
+<td>Mark message as processed</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Build <code>OrderDispatched</code> event</td>
+<td>Prepare Kafka output event</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Send event to <code>order.dispatched</code> topic</td>
+<td>Notify downstream consumers</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Log success message</td>
+<td>Trace successful processing</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="6-duplicate-check-summary">6. Duplicate Check Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Code Part</th>
+<th>Purpose</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>processedEventRepository.findByMessageId(key)</code></td>
+<td>Check if message already processed</td>
+<td>Returns existing entity if duplicate</td>
+</tr>
+<tr>
+<td><code>if (processedEventEntity != null)</code></td>
+<td>Duplicate detection</td>
+<td>Logs duplicate and exits method</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="7-idempotency-summary">7. Idempotency Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Concept</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Idempotency</td>
+<td>Same Kafka message should not be processed more than once</td>
+</tr>
+<tr>
+<td>How achieved here</td>
+<td>Message key is stored in DB after successful processing</td>
+</tr>
+<tr>
+<td>Duplicate handling</td>
+<td>If same key appears again, service skips processing</td>
+</tr>
+<tr>
+<td>Benefit</td>
+<td>Prevents duplicate DB writes and duplicate Kafka publishes</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="8-remote-service-call-summary">8. Remote Service Call Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Value</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Request URL</td>
+<td><code>http://localhost:8082/response/200</code></td>
+<td>External service call</td>
+</tr>
+<tr>
+<td>HTTP Method</td>
+<td><code>GET</code></td>
+<td>Request method</td>
+</tr>
+<tr>
+<td>Tool used</td>
+<td><code>RestTemplate.exchange(...)</code></td>
+<td>Executes HTTP request</td>
+</tr>
+<tr>
+<td>Success condition</td>
+<td>HTTP 200 OK</td>
+<td>Logs response body</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="9-http-response-handling-summary">9. HTTP Response Handling Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Response status = <code>200 OK</code></td>
+<td>Log remote service response</td>
+</tr>
+<tr>
+<td><code>ResourceAccessException</code></td>
+<td>Throw <code>RetryableException</code></td>
+</tr>
+<tr>
+<td><code>HttpServerErrorException</code></td>
+<td>Throw <code>NotRetryableException</code></td>
+</tr>
+<tr>
+<td>Any other <code>Exception</code></td>
+<td>Throw <code>NotRetryableException</code></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="10-exception-classification-summary">10. Exception Classification Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Exception Caught</th>
+<th>Converted To</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ResourceAccessException</code></td>
+<td><code>RetryableException</code></td>
+<td>Temporary issue, retry may succeed</td>
+</tr>
+<tr>
+<td><code>HttpServerErrorException</code></td>
+<td><code>NotRetryableException</code></td>
+<td>Server-side failure treated as non-retryable in this code</td>
+</tr>
+<tr>
+<td>Generic <code>Exception</code></td>
+<td><code>NotRetryableException</code></td>
+<td>Unexpected failure, do not retry</td>
+</tr>
+<tr>
+<td><code>DataIntegrityViolationException</code></td>
+<td><code>NotRetryableException</code></td>
+<td>Duplicate/DB integrity problem, do not retry</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="11-retry-logic-meaning">11. Retry Logic Meaning</h2>
+<table>
+<thead>
+<tr>
+<th>Exception Type</th>
+<th>Effect in Kafka Error Handler</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>RetryableException</code></td>
+<td>Message is retried according to configured backoff</td>
+</tr>
+<tr>
+<td><code>NotRetryableException</code></td>
+<td>Message goes directly to DLT</td>
+</tr>
+<tr>
+<td>No exception</td>
+<td>Processing completes successfully</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="12-database-save-summary">12. Database Save Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Code Part</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>processedEventRepository.save(...)</code></td>
+<td>Stores processed event record</td>
+</tr>
+<tr>
+<td><code>messageId(key)</code></td>
+<td>Saves Kafka key for duplicate detection</td>
+</tr>
+<tr>
+<td><code>orderId(orderCreated.getOrderId().toString())</code></td>
+<td>Stores business order reference</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="13-database-entity-summary">13. Database Entity Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Field Stored</th>
+<th>Source</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>messageId</code></td>
+<td>Kafka message key</td>
+<td>Used for duplicate check</td>
+</tr>
+<tr>
+<td><code>orderId</code></td>
+<td><code>orderCreated.getOrderId()</code></td>
+<td>Stores related order reference</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="14-why-dataintegrityviolationexception-is-caught">14. Why <code>DataIntegrityViolationException</code> Is Caught</h2>
+<table>
+<thead>
+<tr>
+<th>Reason</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DB uniqueness protection</td>
+<td>Two consumers or retries might try to save same message ID</td>
+</tr>
+<tr>
+<td>Safety fallback</td>
+<td>Even if duplicate check passed earlier, DB may reject duplicate insert</td>
+</tr>
+<tr>
+<td>Outcome</td>
+<td>Converted to <code>NotRetryableException</code> so it is not retried endlessly</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="15-orderdispatched-event-summary">15. OrderDispatched Event Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>orderId</code></td>
+<td><code>orderCreated.getOrderId()</code></td>
+<td>Identifies order</td>
+</tr>
+<tr>
+<td><code>processedById</code></td>
+<td><code>APPLICATION_ID</code></td>
+<td>Identifies this processing service instance</td>
+</tr>
+<tr>
+<td><code>notes</code></td>
+<td><code>&quot;Dispatched: &quot; + orderCreated.getItem()</code></td>
+<td>Adds business note</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="16-kafka-publish-summary">16. Kafka Publish Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Value</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Topic</td>
+<td><code>order.dispatched</code></td>
+<td>Output topic</td>
+</tr>
+<tr>
+<td>Key</td>
+<td>Same input <code>key</code></td>
+<td>Preserves message correlation</td>
+</tr>
+<tr>
+<td>Payload</td>
+<td><code>OrderDispatched</code></td>
+<td>Published event</td>
+</tr>
+<tr>
+<td>Send mode</td>
+<td><code>.get()</code></td>
+<td>Waits for send confirmation synchronously</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="17-why-get-is-used">17. Why <code>.get()</code> Is Used</h2>
+<table>
+<thead>
+<tr>
+<th>Point</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Synchronous send</td>
+<td>Waits until Kafka send is completed</td>
+</tr>
+<tr>
+<td>Failure visibility</td>
+<td>If send fails, exception is thrown immediately</td>
+</tr>
+<tr>
+<td>Reliability</td>
+<td>Ensures event is actually sent before method ends</td>
+</tr>
+<tr>
+<td>Trade-off</td>
+<td>Slower than async send</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="18-logging-summary">18. Logging Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Log Statement</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Found a duplicate message id</code></td>
+<td>Duplicate event detected</td>
+</tr>
+<tr>
+<td><code>Received response from a remote service</code></td>
+<td>External call succeeded</td>
+</tr>
+<tr>
+<td><code>RetryableException ==&gt;</code></td>
+<td>Temporary failure identified</td>
+</tr>
+<tr>
+<td><code>NotRetryableException ===&gt;</code></td>
+<td>Non-retryable failure identified</td>
+</tr>
+<tr>
+<td><code>Sent messages: key...</code></td>
+<td>Final Kafka event published successfully</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="19-business-logic-sequence-summary">19. Business Logic Sequence Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Sequence</th>
+<th>Action Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Validation</td>
+<td>Check duplicate message</td>
+</tr>
+<tr>
+<td>2</td>
+<td>External Integration</td>
+<td>Call remote service</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Error Mapping</td>
+<td>Map technical exceptions to business retry types</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Persistence</td>
+<td>Save processed event</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Event Publishing</td>
+<td>Publish <code>OrderDispatched</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td>Audit/Tracing</td>
+<td>Log success details</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="20-success-path-summary">20. Success Path Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Success Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Duplicate check</td>
+<td>No duplicate found</td>
+</tr>
+<tr>
+<td>REST call</td>
+<td>Returns HTTP 200</td>
+</tr>
+<tr>
+<td>DB save</td>
+<td>Processed event saved successfully</td>
+</tr>
+<tr>
+<td>Kafka publish</td>
+<td><code>OrderDispatched</code> sent successfully</td>
+</tr>
+<tr>
+<td>Final result</td>
+<td>Processing completes normally</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="21-failure-path-summary">21. Failure Path Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Failure Point</th>
+<th>Exception Type</th>
+<th>Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>REST connection issue</td>
+<td><code>ResourceAccessException</code></td>
+<td>Retry</td>
+</tr>
+<tr>
+<td>REST server error</td>
+<td><code>HttpServerErrorException</code></td>
+<td>Send to DLT</td>
+</tr>
+<tr>
+<td>Unexpected processing error</td>
+<td><code>Exception</code></td>
+<td>Send to DLT</td>
+</tr>
+<tr>
+<td>DB constraint violation</td>
+<td><code>DataIntegrityViolationException</code></td>
+<td>Send to DLT</td>
+</tr>
+<tr>
+<td>Kafka send failure</td>
+<td>Exception from <code>.get()</code></td>
+<td>Propagates to error handler</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="22-design-benefits-summary">22. Design Benefits Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Benefit</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Idempotency</td>
+<td>Prevents duplicate event processing</td>
+</tr>
+<tr>
+<td>Reliability</td>
+<td>Kafka send is confirmed before completion</td>
+</tr>
+<tr>
+<td>Fault tolerance</td>
+<td>Temporary failures can be retried</td>
+</tr>
+<tr>
+<td>Traceability</td>
+<td>Logs important events and failures</td>
+</tr>
+<tr>
+<td>Event-driven design</td>
+<td>Produces downstream event after processing</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="23-important-technical-note">23. Important Technical Note</h2>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>APPLICATION_ID</code></td>
+<td>Generated once when class is loaded, so same app instance uses same ID</td>
+</tr>
+<tr>
+<td>Duplicate logic</td>
+<td>First checks repository, then DB constraint acts as second protection</td>
+</tr>
+<tr>
+<td>REST error classification</td>
+<td>In this code, <code>HttpServerErrorException</code> is treated as non-retryable</td>
+</tr>
+<tr>
+<td>Kafka publish</td>
+<td>Uses same input key for output event correlation</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="24-final-summary-table">24. Final Summary Table</h2>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Main Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Duplicate check</td>
+<td>Avoid reprocessing same message</td>
+</tr>
+<tr>
+<td>REST call</td>
+<td>External dependency invocation</td>
+</tr>
+<tr>
+<td>Exception mapping</td>
+<td>Decide retry vs DLT</td>
+</tr>
+<tr>
+<td>DB save</td>
+<td>Store processed message ID</td>
+</tr>
+<tr>
+<td>Kafka publish</td>
+<td>Emit <code>OrderDispatched</code> event</td>
+</tr>
+<tr>
+<td>Logging</td>
+<td>Provide observability</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="conclusion">Conclusion</h2>
+<p><code>DispatchService</code> is the core processing layer of your Kafka consumer flow.</p>
+<p>It ensures that:</p>
+<ul>
+<li>duplicate messages are ignored</li>
+<li>temporary failures can be retried</li>
+<li>non-retryable failures go to DLT</li>
+<li>processed events are stored in the database</li>
+<li>successful processing produces an <code>order.dispatched</code> Kafka event</li>
+</ul>
+<p>So this service gives you <strong>idempotency, controlled error handling, persistence, and event publication</strong> in one flow.</p>
+<hr>
+<h1 id="testing">Testing</h1>
+<h1 id="producer">producer</h1>
+<pre class="hljs"><code><div>kafka-console-producer --bootstrap-server kafka1:9092 --topic order.created --property parse.key=<span class="hljs-literal">true</span> --property key.separator=:
+</div></code></pre>
+<p>input json</p>
+<pre class="hljs"><code><div>
+<span class="hljs-string">"123"</span>:{<span class="hljs-attr">"orderId"</span>:<span class="hljs-string">"550e8400-e29b-41d4-a716-446655440001"</span>,<span class="hljs-attr">"item"</span>:<span class="hljs-string">"book-123"</span>}
+
+<span class="hljs-string">"456"</span>:{<span class="hljs-attr">"orderId"</span>:<span class="hljs-string">"550e8400-e29b-41d4-a716-446655440000"</span>,<span class="hljs-attr">"item"</span>:<span class="hljs-string">"book-456"</span>}
+
+</div></code></pre>
+<h1 id="consumer">Consumer</h1>
+<pre class="hljs"><code><div>kafka-console-consumer --bootstrap-server kafka1:9092 --topic order.dispatched --property parse.key=<span class="hljs-literal">true</span> --property key.separator=:
+</div></code></pre>
+<p>&quot;7&quot;:{&quot;orderId&quot;:&quot;550e8400-e29b-41d4-a716-446655440001&quot;,&quot;item&quot;:&quot;book-7&quot;}</p>
+<h1 id="by-default-spring-boot-creates">By default Spring-boot creates</h1>
+<pre class="hljs"><code><div>
+kafka-topics --bootstrap-server kafka1:9092 --create --topic order.created.DLT --partitions 1 --replication-factor 1
+
+</div></code></pre>
+<h1 id="to-view-dlt-value">to view DLT value</h1>
+<pre class="hljs"><code><div>kafka-console-consumer --bootstrap-server localhost:9092 --topic order.created.DLT --from-beginning --property print.headers=<span class="hljs-literal">true</span> --property print.key=<span class="hljs-literal">true</span> --property key.separator=<span class="hljs-string">" | "</span>
+
+</div></code></pre>
+<hr>
+<h1 id="kafka-cli-commands--producer-consumer-and-dlt-summary">Kafka CLI Commands — Producer, Consumer, and DLT Summary</h1>
+<h2 id="overview">Overview</h2>
+<p>This document shows how to:</p>
+<ul>
+<li>produce messages into <code>order.created</code></li>
+<li>consume messages from <code>order.dispatched</code></li>
+<li>create the Dead Letter Topic (<code>order.created.DLT</code>)</li>
+<li>view failed messages from the DLT</li>
+</ul>
+<hr>
+<h2 id="1-producer-command-summary">1. Producer Command Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Command</td>
+<td><code>kafka-console-producer</code></td>
+</tr>
+<tr>
+<td>Bootstrap Server</td>
+<td><code>kafka1:9092</code></td>
+</tr>
+<tr>
+<td>Topic</td>
+<td><code>order.created</code></td>
+</tr>
+<tr>
+<td>Key Parsing</td>
+<td><code>true</code></td>
+</tr>
+<tr>
+<td>Key Separator</td>
+<td><code>:</code></td>
+</tr>
+<tr>
+<td>Purpose</td>
+<td>Send keyed JSON messages to <code>order.created</code> topic</td>
+</tr>
+</tbody>
+</table>
+<h3 id="command">Command</h3>
+<pre class="hljs"><code><div>kafka-console-producer --bootstrap-server kafka1:9092 --topic order.created --property parse.key=<span class="hljs-literal">true</span> --property key.separator=:
+</div></code></pre>
+<h2 id="2-producer-input-format-summary">2. Producer Input Format Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&quot;123&quot;</code></td>
+<td>Kafka message key</td>
+</tr>
+<tr>
+<td><code>{&quot;orderId&quot;:&quot;...&quot;,&quot;item&quot;:&quot;book-123&quot;}</code></td>
+<td>JSON message value</td>
+</tr>
+<tr>
+<td><code>:</code></td>
+<td>Separates key and value</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example Input Messages</strong></p>
+<pre class="hljs"><code><div><span class="hljs-string">"123"</span>:{<span class="hljs-attr">"orderId"</span>:<span class="hljs-string">"550e8400-e29b-41d4-a716-446655440001"</span>,<span class="hljs-attr">"item"</span>:<span class="hljs-string">"book-123"</span>}
+<span class="hljs-string">"456"</span>:{<span class="hljs-attr">"orderId"</span>:<span class="hljs-string">"550e8400-e29b-41d4-a716-446655440000"</span>,<span class="hljs-attr">"item"</span>:<span class="hljs-string">"book-456"</span>}
+</div></code></pre>
+<h2 id="3-input-message-breakdown">3. Input Message Breakdown</h2>
+<table>
+<thead>
+<tr>
+<th>Kafka Key</th>
+<th>orderId</th>
+<th>item</th>
+<th>Topic Sent To</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>123</code></td>
+<td><code>550e8400-e29b-41d4-a716-446655440001</code></td>
+<td><code>book-123</code></td>
+<td><code>order.created</code></td>
+</tr>
+<tr>
+<td><code>456</code></td>
+<td><code>550e8400-e29b-41d4-a716-446655440000</code></td>
+<td><code>book-456</code></td>
+<td><code>order.created</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-consumer-command-summary">4. Consumer Command Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Command</td>
+<td><code>kafka-console-consumer</code></td>
+</tr>
+<tr>
+<td>Bootstrap Server</td>
+<td><code>kafka1:9092</code></td>
+</tr>
+<tr>
+<td>Topic</td>
+<td><code>order.dispatched</code></td>
+</tr>
+<tr>
+<td>Key Parsing</td>
+<td><code>true</code></td>
+</tr>
+<tr>
+<td>Key Separator</td>
+<td><code>:</code></td>
+</tr>
+<tr>
+<td>Purpose</td>
+<td>Read processed messages from <code>order.dispatched</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Command</strong></p>
+<pre class="hljs"><code><div>kafka-console-consumer --bootstrap-server kafka1:<span class="hljs-number">9092</span> --topic order.dispatched --property parse.key=<span class="hljs-keyword">true</span> --property key.separator=:
+</div></code></pre>
+<h2 id="5-consumer-output-meaning">5. Consumer Output Meaning</h2>
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&quot;7&quot;</code></td>
+<td>Kafka key of processed event</td>
+</tr>
+<tr>
+<td>JSON payload</td>
+<td>Event published after successful processing</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example Output</strong></p>
+<pre class="hljs"><code><div><span class="hljs-string">"7"</span>:{<span class="hljs-attr">"orderId"</span>:<span class="hljs-string">"550e8400-e29b-41d4-a716-446655440001"</span>,<span class="hljs-attr">"item"</span>:<span class="hljs-string">"book-7"</span>}
+</div></code></pre>
+<h2 id="6-dlt-topic-summary">6. DLT Topic Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DLT Name</td>
+<td><code>order.created.DLT</code></td>
+</tr>
+<tr>
+<td>Source Topic</td>
+<td><code>order.created</code></td>
+</tr>
+<tr>
+<td>Purpose</td>
+<td>Stores failed messages that could not be processed successfully</td>
+</tr>
+<tr>
+<td>Trigger</td>
+<td>Non-retryable exception or retries exhausted</td>
+</tr>
+</tbody>
+</table>
+<h2 id="7-dlt-create-command-summary">7. DLT Create Command Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Command</td>
+<td><code>kafka-topics --create</code></td>
+</tr>
+<tr>
+<td>Topic Name</td>
+<td><code>order.created.DLT</code></td>
+</tr>
+<tr>
+<td>Partitions</td>
+<td><code>1</code></td>
+</tr>
+<tr>
+<td>Replication Factor</td>
+<td><code>1</code></td>
+</tr>
+<tr>
+<td>Purpose</td>
+<td>Manually create the DLT topic</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Command</strong></p>
+<pre class="hljs"><code><div>kafka-topics --bootstrap-server kafka1:<span class="hljs-number">9092</span> --create --topic order.created.DLT --partitions <span class="hljs-number">1</span> --replication-factor <span class="hljs-number">1</span>
+</div></code></pre>
+<h2 id="8-important-clarification-about-dlt-creation">8. Important Clarification About DLT Creation</h2>
+<table>
+<thead>
+<tr>
+<th>Statement</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&quot;By default Spring Boot creates&quot;</td>
+<td>Not always correct</td>
+</tr>
+<tr>
+<td>Actual behavior</td>
+<td>Spring Kafka sends to DLT if configured, but the topic itself usually must already exist unless broker auto-topic creation is enabled</td>
+</tr>
+<tr>
+<td>Safe approach</td>
+<td>Manually create <code>order.created.DLT</code> before testing</td>
+</tr>
+</tbody>
+</table>
+<h2 id="9-dlt-consumer-command-summary">9. DLT Consumer Command Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Value</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Command</td>
+<td><code>kafka-console-consumer</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Bootstrap Server</td>
+<td><code>localhost:9092</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Topic</td>
+<td><code>order.created.DLT</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Read Mode</td>
+<td><code>--from-beginning</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Print Headers</td>
+<td><code>true</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Print Key</td>
+<td><code>true</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Key Separator</td>
+<td><code>                                                      |</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Purpose</td>
+<td>View failed messages from the DLT with headers and keys</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Command</strong></p>
+<pre class="hljs"><code><div>kafka-console-consumer --bootstrap-server localhost:<span class="hljs-number">9092</span> --topic order.created.DLT --from-beginning --property print.headers=<span class="hljs-keyword">true</span> --property print.key=<span class="hljs-keyword">true</span> --property key.separator=<span class="hljs-string">" | "</span>
+</div></code></pre>
+<h2 id="10-dlt-consumer-output-summary">10. DLT Consumer Output Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Output Part</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Headers</td>
+<td>Metadata added by Spring Kafka during DLT publishing</td>
+</tr>
+<tr>
+<td>Key</td>
+<td>Original Kafka message key</td>
+</tr>
+<tr>
+<td>Value</td>
+<td>Original failed payload</td>
+</tr>
+<tr>
+<td>Topic</td>
+<td><code>order.created.DLT</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="11-expected-end-to-end-flow">11. Expected End-to-End Flow</h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Action</th>
+<th>Topic</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Producer sends input message</td>
+<td><code>order.created</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Spring Kafka listener reads message</td>
+<td><code>order.created</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>DispatchService</code> processes message</td>
+<td>Internal service logic</td>
+</tr>
+<tr>
+<td>4A</td>
+<td>If success, publish output event</td>
+<td><code>order.dispatched</code></td>
+</tr>
+<tr>
+<td>4B</td>
+<td>If failure, publish failed event</td>
+<td><code>order.created.DLT</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="12-success-vs-failure-flow-summary">12. Success vs Failure Flow Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Result</th>
+<th>Topic</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Processing successful</td>
+<td>Message published as dispatched event</td>
+<td><code>order.dispatched</code></td>
+</tr>
+<tr>
+<td><code>RetryableException</code> then success</td>
+<td>Eventually processed successfully</td>
+<td><code>order.dispatched</code></td>
+</tr>
+<tr>
+<td><code>RetryableException</code> and retries exhausted</td>
+<td>Message moved to DLT</td>
+<td><code>order.created.DLT</code></td>
+</tr>
+<tr>
+<td><code>NotRetryableException</code></td>
+<td>Message moved directly to DLT</td>
+<td><code>order.created.DLT</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="13-command-comparison-table">13. Command Comparison Table</h2>
+<table>
+<thead>
+<tr>
+<th>Command Type</th>
+<th>Main Use</th>
+<th>Topic</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Producer</td>
+<td>Send test input messages</td>
+<td><code>order.created</code></td>
+</tr>
+<tr>
+<td>Consumer</td>
+<td>Read successfully processed events</td>
+<td><code>order.dispatched</code></td>
+</tr>
+<tr>
+<td>Topic Create</td>
+<td>Create dead letter topic</td>
+<td><code>order.created.DLT</code></td>
+</tr>
+<tr>
+<td>DLT Consumer</td>
+<td>Read failed messages</td>
+<td><code>order.created.DLT</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="14-practical-notes">14. Practical Notes</h2>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bootstrap server mismatch</td>
+<td>You used <code>kafka1:9092</code> in some commands and <code>localhost:9092</code> in DLT consumer. Use the correct broker address for your environment</td>
+</tr>
+<tr>
+<td>Message format</td>
+<td>With <code>parse.key=true</code>, input must be <code>key:value</code> format</td>
+</tr>
+<tr>
+<td>DLT debugging</td>
+<td><code>print.headers=true</code> is useful because Spring Kafka adds failure metadata headers</td>
+</tr>
+<tr>
+<td>Key preservation</td>
+<td>DLT record usually keeps the original key</td>
+</tr>
+<tr>
+<td>Testing</td>
+<td>Produce bad or failing messages to verify DLT flow</td>
+</tr>
+</tbody>
+</table>
+<h2 id="15-final-summary-table">15. Final Summary Table</h2>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Producer command</td>
+<td>Send <code>OrderCreated</code> test messages</td>
+</tr>
+<tr>
+<td>Consumer command</td>
+<td>Read successful processed events</td>
+</tr>
+<tr>
+<td>DLT creation</td>
+<td>Prepare dead letter topic</td>
+</tr>
+<tr>
+<td>DLT consumer</td>
+<td>Inspect failed records and headers</td>
+</tr>
+<tr>
+<td>Overall flow</td>
+<td>Validate Kafka processing, retry, and DLT behavior</td>
+</tr>
+</tbody>
+</table>
+<p>Conclusion</p>
+<p>This setup helps you test the full Kafka processing lifecycle:</p>
+<ul>
+<li>send events to <code>order.created</code></li>
+<li>verify successful output in <code>order.dispatched</code></li>
+<li>verify failed events in <code>order.created.DLT</code></li>
+</ul>
+<p>It is a clean way to test both normal processing and error recovery with DLT.</p>
+<h1 id="diagram--kafka-flow-with-retry-dlt-and-remarks">Diagram — Kafka Flow with Retry, DLT, and Remarks</h1>
+<p>Below is a colorful <strong>Sequence diagram</strong> for your Kafka producer, consumer, <code>OrderCreateHandler</code>, <code>DispatchService</code>, DB, remote service, success flow, retry flow, and DLT flow.</p>
+<hr>
+<p><img src="file:///Users/chandragauro/Tutorial/github/kafka/kafka_example/idemotent/image.png" alt="alt text"></p>
+<p><strong>Remark</strong></p>
+<table>
+<thead>
+<tr>
+<th>Remark</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Producer</strong> sends <code>OrderCreated</code> into <code>order.created</code></td>
+<td>Starting point of the flow</td>
+</tr>
+<tr>
+<td><strong>OrderCreateHandler</strong> is the Kafka listener</td>
+<td>Receives partition, key, and payload</td>
+</tr>
+<tr>
+<td><strong>DispatchService</strong> contains the main business logic</td>
+<td>Duplicate check, remote call, DB save, Kafka publish</td>
+</tr>
+<tr>
+<td><strong>ProcessedEventRepository</strong> provides idempotency</td>
+<td>Prevents duplicate processing</td>
+</tr>
+<tr>
+<td><strong>Remote Service</strong> decides success or failure path</td>
+<td>200 = success, connection issue = retry, server issue = DLT</td>
+</tr>
+<tr>
+<td><strong>DefaultErrorHandler</strong> manages retry and recovery</td>
+<td>Central retry/DLT logic</td>
+</tr>
+<tr>
+<td><strong>order.dispatched</strong> is the success topic</td>
+<td>Final event after successful processing</td>
+</tr>
+<tr>
+<td><strong>order.created.DLT</strong> is the failure topic</td>
+<td>Stores poisoned or exhausted retry messages</td>
+</tr>
+</tbody>
+</table>
+<h2 id="short-explanation">Short Explanation</h2>
+<p><strong>Success Flow</strong></p>
+<ol>
+<li>Producer sends message to <code>order.created</code></li>
+<li>Kafka listener receives it</li>
+<li><code>DispatchService</code> checks duplicate</li>
+<li>Remote service returns <code>200</code> <code>OK</code></li>
+<li>Processed event is saved in DB</li>
+<li><code>OrderDispatched</code> is published to <code>order.dispatched</code></li>
+</ol>
+<p><strong>Retry Flow</strong></p>
+<ol>
+<li>Remote call throws <code>ResourceAccessException</code></li>
+<li>Service throws <code>RetryableException</code></li>
+<li>Error handler retries 3 times with 5-second delay</li>
+<li>If later successful, message continues normally</li>
+<li>If still failing, record goes to DLT</li>
+</ol>
+<p><strong>DLT Flow</strong></p>
+<ol>
+<li><code>NotRetryableException</code> occurs, or retries are exhausted</li>
+<li><code>DeadLetterPublishingRecoverer</code> publishes original message to <code>order.created.DLT</code></li>
+<li>You can inspect it with Kafka console consumer</li>
+</ol>
+<p><img src="file:///Users/chandragauro/Tutorial/github/kafka/kafka_example/idemotent/image-1.png" alt="alt text"></p>
+
+</body>
+</html>
