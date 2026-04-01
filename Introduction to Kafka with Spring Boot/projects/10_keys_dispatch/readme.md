@@ -1,3 +1,8 @@
+
+
+
+
+
 # Testing:
 
 ##  Testing Notes — Single Kafka Consumer Group Behavior
@@ -36,11 +41,29 @@ Check application console
 kafka-consumer-groups --bootstrap-server localhost:9092 --list
 ```
 
+**output**
+```bash
+dispatch.order.created.consumer
+console-consumer-41373
+console-consumer-95726
+dispatch.order.created.consumer2
+console-consumer-13198
+```
+
+
 ## TO describe consumer groups of given group
 
 ```bash
 kafka-consumer-groups --bootstrap-server localhost:9092 --describe --group dispatch.order.created.consumer
 ```
+
+**output**
+```bash
+GROUP                           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                                     HOST            CLIENT-ID
+dispatch.order.created.consumer order.created   0          46              46              0               consumer-dispatch.order.created.consumer-1-aa326c0a-d351-42ab-a40c-49a43610bf1b /192.168.65.1   consumer-dispatch.order.created.consumer-1
+
+```
+
 
 
 -----
@@ -50,19 +73,56 @@ kafka-consumer-groups --bootstrap-server localhost:9092 --describe --group dispa
 ```bash
 bin/kafka-topics.sh --bootstarp-server localhost:9092 --describe --topic order.created
 ```
+ **output**
+ ```bash
+ Topic: order.created    TopicId: RfCmltvjThagIZ-TsqlTjw PartitionCount: 1       ReplicationFactor: 1    Configs: 
+        Topic: order.created    Partition: 0    Leader: 1       Replicas: 1     Isr: 1
+```        
 
 ## To Alter partition
 ```bash
 bin/kafka-topics.sh --bootstrap-server localhost:9092 --alter --topic order.created --partitions 5
 ```
 
+
 ## To describe partition
 ```bash
 bin/kafka-topics.sh --bootstarp-server localhost:9092 --describe --topic order.created
 ```
+
+**outbput**
+```bash
+Topic: order.created    TopicId: RfCmltvjThagIZ-TsqlTjw PartitionCount: 5       ReplicationFactor: 1    Configs: 
+        Topic: order.created    Partition: 0    Leader: 1       Replicas: 1     Isr: 1
+        Topic: order.created    Partition: 1    Leader: 1       Replicas: 1     Isr: 1
+        Topic: order.created    Partition: 2    Leader: 1       Replicas: 1     Isr: 1
+        Topic: order.created    Partition: 3    Leader: 1       Replicas: 1     Isr: 1
+        Topic: order.created    Partition: 4    Leader: 1       Replicas: 1     Isr: 1
+```
+
+
 Run two Application:
 
-App1, and App2 and check console
+App1 
+```
+mvn spring-boot:run
+```
+
+In console 
+```bash
+ dispatch.order.created.consumer: partitions assigned: [order.created-0, order.created-1, order.created-2, order.created-3, order.created-4]
+```
+
+Now run another App2
+```bash
+ dispatch.order.created.consumer: partitions assigned: [order.created-3, order.created-4]
+```
+
+ and check back to the App1 console. It automatically re balance
+
+ ```bash
+ dispatch.order.created.consumer: partitions assigned: [order.created-0, order.created-1, order.created-2]
+ ```
 
 
 
@@ -71,10 +131,28 @@ App1, and App2 and check console
 ```bash
 kafka-consumer-groups --bootstrap-server localhost:9092 --list
 ```
+output
+```bash
+dispatch.order.created.consumer
+console-consumer-41373
+console-consumer-95726
+dispatch.order.created.consumer2
+console-consumer-13198
+```
 
 ### TO describe consumer groups of given group
 ```bash
 kafka-consumer-groups --bootstrap-server localhost:9092 --describe --group dispatch.order.created.consumer
+```
+
+```bash
+
+GROUP                           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                                     HOST            CLIENT-ID
+dispatch.order.created.consumer order.created   0          46              46              0               consumer-dispatch.order.created.consumer-1-1560b722-d0d5-4e00-b501-75fe86b3353d /192.168.65.1   consumer-dispatch.order.created.consumer-1
+dispatch.order.created.consumer order.created   1          0               0               0               consumer-dispatch.order.created.consumer-1-1560b722-d0d5-4e00-b501-75fe86b3353d /192.168.65.1   consumer-dispatch.order.created.consumer-1
+dispatch.order.created.consumer order.created   2          0               0               0               consumer-dispatch.order.created.consumer-1-1560b722-d0d5-4e00-b501-75fe86b3353d /192.168.65.1   consumer-dispatch.order.created.consumer-1
+dispatch.order.created.consumer order.created   3          0               0               0               consumer-dispatch.order.created.consumer-1-33b1284e-2a1e-449a-92ff-c9dd9ac5e343 /192.168.65.1   consumer-dispatch.order.created.consumer-1
+dispatch.order.created.consumer order.created   4          0               0               0               consumer-dispatch.order.created.consumer-1-33b1284e-2a1e-449a-92ff-c9dd9ac5e343 /192.168.65.1   consumer-dispatch.order.created.consumer-1
 ```
 
 Consumer running
@@ -93,3 +171,10 @@ Check application console
 ---
 
 Now Stop App1
+
+"1":{"orderId":"550e8400-e29b-41d4-a716-446655440001","item":"book-456"} 
+"2":{"orderId":"550e8400-e29b-41d4-a716-446655440001","item":"book-456"} 
+"3":{"orderId":"550e8400-e29b-41d4-a716-446655440001","item":"book-456"} 
+"4":{"orderId":"550e8400-e29b-41d4-a716-446655440001","item":"book-456"} 
+"5":{"orderId":"550e8400-e29b-41d4-a716-446655440001","item":"book-456"} 
+"6":{"orderId":"550e8400-e29b-41d4-a716-446655440001","item":"book-456"} 
