@@ -17,7 +17,6 @@ public class OrderCreateHandler {
 
     private final DispatchService dispatchService;
 
-
     @KafkaListener(
             id = "orderConsumerClient",
             topics = "order.created",
