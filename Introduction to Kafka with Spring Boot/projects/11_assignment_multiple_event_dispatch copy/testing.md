@@ -1,164 +1,331 @@
-# Kafka Configuration 
 
-## Configuration Explained
-```yaml
-kafka:
-    bootstrap-servers: ${spring.embedded.kafka.brokers}
-```
-
-### 🔹 Summary Table
-
-| Property                           | Meaning                     | Explanation                                              |
-| ---------------------------------- | --------------------------- | -------------------------------------------------------- |
-| `kafka.bootstrap-servers`          | Kafka broker address        | Tells your application where Kafka is running            |
-| `${spring.embedded.kafka.brokers}` | Dynamic value (from Spring) | Automatically provides Kafka broker address during tests |
-
-----
-
+# DispatchServiceTest — Summary Tables
 ```java
 
-class OrderCreateHandlerTest {
+class DispatchServiceTest {
 
-    private OrderCreateHandler orderCreateHandler;
-    private DispatchService dispatchServiceMock;
+    private DispatchService service;
+    private KafkaTemplate kafkaProducerMock;
 
     @BeforeEach
-    void setUp(){
-        dispatchServiceMock=mock(DispatchService.class);
-        orderCreateHandler=new OrderCreateHandler(dispatchServiceMock);
+    void setUp() {
+        kafkaProducerMock = mock(KafkaTemplate.class);
+        service = new DispatchService(kafkaProducerMock);
     }
 
     @Test
-    void listenSuccess()throws Exception{
+    void process_Success() throws Exception {
+        when(kafkaProducerMock.send(anyString(), anyString(), any(DispatchPreparing.class))).thenReturn(mock(CompletableFuture.class));
+        when(kafkaProducerMock.send(anyString(), anyString(), any(OrderDispatched.class))).thenReturn(mock(CompletableFuture.class));
+        when(kafkaProducerMock.send(anyString(),anyString(),any(DispatchCompleted.class))).thenReturn(mock(CompletableFuture.class));
+
+
+
+        String key = randomUUID().toString();
+        OrderCreated testEvent = TestEventData.buildOrderCreatedEvent(randomUUID(), randomUUID().toString());
+        service.process(key, testEvent);
+
+        verify(kafkaProducerMock, times(1)).send(eq("dispatch.tracking"), eq(key), any(DispatchPreparing.class));
+        verify(kafkaProducerMock, times(1)).send(eq("order.dispatched"), eq(key), any(OrderDispatched.class));
+        verify(kafkaProducerMock, times(1)).send(eq("dispatch.tracking"), eq(key), any(DispatchCompleted.class));
+
+    }
+
+    @Test
+    void process_DispatchTrackingProducerThrowsException() {
         String key=randomUUID().toString();
-        OrderCreated testEvent= TestEventData.buildOrderCreatedEvent(randomUUID(), randomUUID().toString());
-        orderCreateHandler.listen(0, key,testEvent);
-        verify(dispatchServiceMock, times(1)).process(key, testEvent);
+        OrderCreated testEvent = TestEventData.buildOrderCreatedEvent(randomUUID(), randomUUID().toString());
+        doThrow(new RuntimeException("dispatch tracking producer failure"))
+                .when(kafkaProducerMock)
+                .send(eq("dispatch.tracking"), eq(key), any(DispatchPreparing.class));
+        Exception exception = assertThrows(RuntimeException.class, () -> service.process(key,testEvent));
+
+        verify(kafkaProducerMock, times(1))
+                .send( eq("dispatch.tracking"), eq(key), any(DispatchPreparing.class));
+        verifyNoMoreInteractions(kafkaProducerMock);
+        assertThat(exception.getMessage(), equalTo("dispatch tracking producer failure"));
+
     }
 
     @Test
-    public void listen_ServiceThrowsException() throws Exception{
+    void process_OrderDispatchedThrowsException() {
+        String key=randomUUID().toString();
+        OrderCreated testEvent = TestEventData.buildOrderCreatedEvent(randomUUID(), randomUUID().toString());
+        when(kafkaProducerMock.send(anyString(), anyString(), any(DispatchPreparing.class))).thenReturn(mock(CompletableFuture.class));
+        doThrow(new RuntimeException("order dispatch producer failure")).when(kafkaProducerMock)
+                .send(eq("order.dispatched"), eq(key), any(OrderDispatched.class));
+        Exception exception=assertThrows(RuntimeException.class,()->service.process(key,testEvent));
+        verify(kafkaProducerMock,times(1)).send(eq("dispatch.tracking"),eq(key), any(DispatchPreparing.class));
+        verify(kafkaProducerMock,times(1)).send(eq("order.dispatched"), eq(key), any(OrderDispatched.class));
+
+        verifyNoMoreInteractions(kafkaProducerMock);
+        assertThat(exception.getMessage(), equalTo("order dispatch producer failure"));
+
+    }
+
+    @Test
+    void process_SecondDispatchedProducerThrowException(){
         String key=randomUUID().toString();
         OrderCreated testEvent=TestEventData.buildOrderCreatedEvent(randomUUID(),randomUUID().toString());
-        doThrow(new RuntimeException("Service failure")).when(dispatchServiceMock).process(key,testEvent);
-        orderCreateHandler.listen(0,key,testEvent);
-        verify(dispatchServiceMock,times(1)).process(key,testEvent);
+        when(kafkaProducerMock.send(anyString(),anyString(), any(DispatchPreparing.class))).thenReturn(mock(CompletableFuture.class));
+        when(kafkaProducerMock.send(anyString(),anyString(),any(OrderDispatched.class))).thenReturn(mock(CompletableFuture.class));
+
+        doThrow(new RuntimeException("Dispatch completed producer failure")). when(kafkaProducerMock)
+                .send(anyString(),anyString(), any(DispatchCompleted.class));
+        Exception exception=assertThrows(RuntimeException.class,()->service.process(key, testEvent));
+
+        verify(kafkaProducerMock,times(1)).send(eq("dispatch.tracking"),eq(key),any(DispatchPreparing.class));
+        verify(kafkaProducerMock,times(1)).send(eq("order.dispatched"),eq(key), any(OrderDispatched.class));
+        verify(kafkaProducerMock,times(1)).send(eq("dispatch.tracking"),eq(key),any(DispatchCompleted.class));
+
+
+        assertThat(exception.getMessage(),equalTo("Dispatch completed producer failure"));
 
     }
-
 }
 ```
 
+## 1. Class Overview
 
-## 1. Purpose of the Test Class
-
-| Component | Description |
-|----------|------------|
-| `OrderCreateHandlerTest` | Unit test class for testing `OrderCreateHandler` |
-| Goal | Verify that incoming Kafka messages are handled correctly |
-| Dependency | `DispatchService` (mocked) |
-| Focus | Ensuring `listen()` method calls `process()` correctly |
-
----
-
-## 2. Setup Phase (@BeforeEach)
-
-| Step | Code | Purpose |
-|-----|------|--------|
-| 1 | `dispatchServiceMock = mock(DispatchService.class)` | Create mock of service |
-| 2 | `orderCreateHandler = new OrderCreateHandler(dispatchServiceMock)` | Inject mock into handler |
-| Outcome | Handler is isolated for unit testing |
+| Item | Description |
+|------|-------------|
+| Class Name | `DispatchServiceTest` |
+| Purpose | Unit test class for `DispatchService` |
+| Test Type | Unit testing with Mockito |
+| Main Goal | Verify Kafka producer calls and exception handling |
 
 ---
 
-## 3. Test Case 1 — Success Scenario
+## 2. Objects Used in Test
 
-### ▸ Method: `listenSuccess()`
-
-| Element | Value |
-|--------|------|
-| Input Key | Random UUID |
-| Input Event | `OrderCreated` test object |
-| Action | `orderCreateHandler.listen(0, key, testEvent)` |
-| Expected Behavior | Service method is called |
-| Verification | `process(key, testEvent)` called exactly once |
-
-### ✔ Assertion Summary
-
-| Check | Result |
-|------|--------|
-| Method call count | `times(1)` |
-| Exception expected | ❌ No |
-| Outcome | ✅ Success path verified |
+| Field | Type | Description |
+|------|------|-------------|
+| `service` | `DispatchService` | Class under test |
+| `kafkaProducerMock` | `KafkaTemplate` | Mocked Kafka producer |
 
 ---
 
-## 4. Test Case 2 — Exception Scenario
+## 3. Test Setup
 
-### ▸ Method: `listen_ServiceThrowsException()`
+| Method | Purpose | Explanation |
+|--------|---------|-------------|
+| `setUp()` | Initialize test objects | Creates mocked `KafkaTemplate` and injects it into `DispatchService` |
 
-| Element | Value |
-|--------|------|
-| Input Key | Random UUID |
-| Input Event | `OrderCreated` test object |
-| Mock Behavior | `dispatchServiceMock.process()` throws exception |
-| Action | `orderCreateHandler.listen(0, key, testEvent)` |
-| Expected Behavior | Method still invoked despite exception |
+### Setup Flow
 
-### ✔ Assertion Summary
+```java
+kafkaProducerMock = mock(KafkaTemplate.class);
+service = new DispatchService(kafkaProducerMock);
+```
 
-| Check | Result |
-|------|--------|
-| Method call count | `times(1)` |
-| Exception thrown from test | ❌ Not propagated |
-| Outcome | ✅ Handler tolerates service failure |
-
----
-
-## 5. Behavior Comparison
-
-| Scenario | Service Behavior | Handler Reaction | Result |
-|----------|----------------|----------------|--------|
-| Success | Normal execution | Calls `process()` | ✅ Pass |
-| Exception | Throws RuntimeException | Still calls `process()` | ✅ Pass |
-
----
-
-## 6. Key Testing Concepts Used
-
-| Concept | Usage |
-|--------|------|
-| Mocking | `DispatchService` mocked using Mockito |
-| Dependency Injection | Mock passed into handler |
-| Verification | `verify(..., times(1))` ensures method call |
-| Exception Simulation | `doThrow()` used to simulate failure |
-| Isolation | Only handler logic tested |
-
----
-
-## 7. Key Takeaways
-
-| Insight | Explanation |
-|--------|------------|
-| Handler Responsibility | Delegates work to `DispatchService` |
-| Robustness | Handles service failure without crashing |
-| Test Coverage | Covers both success and failure paths |
-| Design Benefit | Loose coupling via dependency injection |
-
----
-
-## Final Summary
-
-| Aspect | Explanation |
-|-------|------------|
-| What is tested? | `listen()` method of handler |
-| What is verified? | Service interaction |
-| Why important? | Ensures reliable message handling |
-| Overall Result | ✅ Handler behaves correctly in all scenarios |
+| Step                     | Meaning                                     |
+| ------------------------ | ------------------------------------------- |
+| Mock KafkaTemplate       | Real Kafka is not used                      |
+| Inject mock into service | Service behavior can be tested in isolation |
 
 
-----
-# OrderDispatchIntegrationTest 
+## 4. Test Cases Summary
+
+| Test Method                                         | Scenario                | Expected Result                              |
+| --------------------------------------------------- | ----------------------- | -------------------------------------------- |
+| `process_Success()`                                 | All Kafka sends succeed | All 3 messages are sent once                 |
+| `process_DispatchTrackingProducerThrowsException()` | First send fails        | Exception thrown, no more sends              |
+| `process_OrderDispatchedThrowsException()`          | Second send fails       | Exception thrown, third send not executed    |
+| `process_SecondDispatchedProducerThrowException()`  | Third send fails        | Exception thrown after first 2 sends succeed |
+
+
+## 5. Detailed Test Explanation
+### 5.1 `process_Success()`
+
+**Purpose**
+
+Tests the successful flow where all Kafka messages are sent correctly.
+
+**Mock Behavior**
+| Kafka Call                        | Mock Response                      |
+| --------------------------------- | ---------------------------------- |
+| `send(... DispatchPreparing ...)` | returns mocked `CompletableFuture` |
+| `send(... OrderDispatched ...)`   | returns mocked `CompletableFuture` |
+| `send(... DispatchCompleted ...)` | returns mocked `CompletableFuture` |
+
+
+**Verified Calls**
+
+| Topic               | Key        | Payload             |
+| ------------------- | ---------- | ------------------- |
+| `dispatch.tracking` | same `key` | `DispatchPreparing` |
+| `order.dispatched`  | same `key` | `OrderDispatched`   |
+| `dispatch.tracking` | same `key` | `DispatchCompleted` |
+
+
+**Meaning**
+
+This confirms that:
+
+- dispatch preparation event is sent first
+- order dispatched event is sent second
+- dispatch completed event is sent third
+
+### 5.2 `process_DispatchTrackingProducerThrowsException()`
+
+**Purpose**
+
+Tests what happens if the first Kafka send fails.
+
+**Failure Point**
+
+| Send Call                                    | Result                    |
+| -------------------------------------------- | ------------------------- |
+| `dispatch.tracking` with `DispatchPreparing` | throws `RuntimeException` |
+
+
+**Expected Behavior**
+| Check                 | Expected |
+| --------------------- | -------- |
+| First send attempted  | Yes      |
+| Second send attempted | No       |
+| Third send attempted  | No       |
+| Exception thrown      | Yes      |
+
+
+**Important Verification**
+```java
+verifyNoMoreInteractions(kafkaProducerMock);
+```
+
+This means after the first failure:
+- service stops immediately
+- no further Kafka calls happen
+
+### 5.3 process_OrderDispatchedThrowsException()
+
+**Purpose**
+
+Tests what happens if the **second Kafka send** fails.
+
+**Flow**
+| Step                             | Result       |
+| -------------------------------- | ------------ |
+| First send (`DispatchPreparing`) | succeeds     |
+| Second send (`OrderDispatched`)  | fails        |
+| Third send (`DispatchCompleted`) | not executed |
+
+
+**Expected Behavior**
+| Check                   | Expected |
+| ----------------------- | -------- |
+| First send called once  | Yes      |
+| Second send called once | Yes      |
+| Third send called       | No       |
+| Exception thrown        | Yes      |
+
+**Meaning**
+
+This confirms the method does not continue after failure in the second step.
+
+### 5.4 `process_SecondDispatchedProducerThrowException()`
+
+**Purpose**
+
+Tests what happens if the **third Kafka send** fails.
+
+**Flow**
+| Step                             | Result   |
+| -------------------------------- | -------- |
+| First send (`DispatchPreparing`) | succeeds |
+| Second send (`OrderDispatched`)  | succeeds |
+| Third send (`DispatchCompleted`) | fails    |
+
+
+**Expected Behavior**
+| Check                   | Expected |
+| ----------------------- | -------- |
+| First send called once  | Yes      |
+| Second send called once | Yes      |
+| Third send called once  | Yes      |
+| Exception thrown        | Yes      |
+
+
+**Meaning**
+
+This confirms the service reaches the last step and fails there correctly.
+
+## 6. Mockito Methods Used
+
+| Mockito Method                  | Purpose                                |
+| ------------------------------- | -------------------------------------- |
+| `mock(...)`                     | Creates fake object                    |
+| `when(...).thenReturn(...)`     | Defines success behavior               |
+| `doThrow(...).when(...)`        | Defines exception behavior             |
+| `verify(...)`                   | Confirms method call                   |
+| `times(1)`                      | Ensures called exactly once            |
+| `verifyNoMoreInteractions(...)` | Ensures no extra Kafka calls were made |
+
+
+## 7. Assertion Methods Used
+| Assertion                       | Purpose                    |
+| ------------------------------- | -------------------------- |
+| `assertThrows(...)`             | Checks exception is thrown |
+| `assertThat(..., equalTo(...))` | Verifies exception message |
+
+
+## 8. Test Logic Flow Summary
+**Successful Flow**
+```bash
+process()
+ ├── send DispatchPreparing ✅
+ ├── send OrderDispatched ✅
+ └── send DispatchCompleted ✅
+```
+
+**First Send Failure**
+```bash
+process()
+ ├── send DispatchPreparing ❌
+ └── stop
+``` 
+**Second Send Failure**
+
+```bash
+process()
+ ├── send DispatchPreparing ✅
+ ├── send OrderDispatched ❌
+ └── stop
+```
+
+**Third Send Failure**
+```bash
+process()
+ ├── send DispatchPreparing ✅
+ ├── send OrderDispatched ✅
+ ├── send DispatchCompleted ❌
+ └── exception
+```
+
+## 9. Strengths of This Test Class
+
+| Strength             | Explanation                                 |
+| -------------------- | ------------------------------------------- |
+| Good coverage        | Tests success and all main failure points   |
+| Isolated testing     | No real Kafka dependency                    |
+| Clear verification   | Confirms exact topic, key, and payload type |
+| Failure path testing | Ensures processing stops on error           |
+
+
+## 10. Final Summary Table
+
+| Test Case         | 1st Send | 2nd Send    | 3rd Send    | Expected Outcome  |
+| ----------------- | -------- | ----------- | ----------- | ----------------- |
+| Success           | ✅        | ✅           | ✅           | All messages sent |
+| First send fails  | ❌        | Not reached | Not reached | Exception thrown  |
+| Second send fails | ✅        | ❌           | Not reached | Exception thrown  |
+| Third send fails  | ✅        | ✅           | ❌           | Exception thrown  |
+
+------
+
+# OrderDispatchIntegrationTest — Summary Tables
+
+> Source: Uploaded integration test file :contentReference[oaicite:0]{index=0}
 
 ```java
 
@@ -199,11 +366,16 @@ public class OrderDispatchIntegrationTest {
     /**
      * Use this receiver to consume messages from the outbound topics.
      */
+
+    @KafkaListener(groupId ="kafkaIntegrationTest", topics = {DISPATCH_TRACKING_TOPIC, ORDER_DISPATCHED_TOPIC})
     public static class KafkaTestListener {
         AtomicInteger dispatchPreparingCounter = new AtomicInteger(0);
         AtomicInteger orderDispatchedCounter = new AtomicInteger(0);
+        AtomicInteger dispatchCompletedCounter=new AtomicInteger(0);
 
-        @KafkaListener(groupId = "KafkaIntegrationTest", topics = DISPATCH_TRACKING_TOPIC)
+
+       // @KafkaListener(groupId = "KafkaIntegrationTest", topics = DISPATCH_TRACKING_TOPIC)
+        @KafkaHandler
         void receiveDispatchPreparing(@Header(KafkaHeaders.RECEIVED_KEY) String key, @Payload DispatchPreparing payload) {
 
             log.info("receiveDispatchPreparing=>Received DispatchPreparing key: {}  - payload: {}", key, payload);
@@ -212,12 +384,21 @@ public class OrderDispatchIntegrationTest {
             dispatchPreparingCounter.incrementAndGet();
         }
 
-        @KafkaListener(groupId = "KafkaIntegrationTest", topics = ORDER_DISPATCHED_TOPIC)
+       // @KafkaListener(groupId = "KafkaIntegrationTest", topics = ORDER_DISPATCHED_TOPIC)
+        @KafkaHandler
         void receiveOrderDispatched(@Header(KafkaHeaders.RECEIVED_KEY) String key, @Payload OrderDispatched payload) {
             log.info("receiveOrderDispatched ==> Received OrderDispatched: key: {} - payload :{} ", key, payload);
             assertThat(key, notNullValue());
             assertThat(payload, notNullValue());
             orderDispatchedCounter.incrementAndGet();
+        }
+
+        @KafkaHandler
+        void receivedDispatchCompleted(@Header(KafkaHeaders.RECEIVED_KEY) String key, @Payload DispatchCompleted dispatchCompleted){
+            log.info("receivedDispatchCompleted ==> Received DispatchCompleted : key : {} - payload: {}", key,dispatchCompleted);
+            assertThat(key,notNullValue());
+            assertThat(dispatchCompleted, notNullValue());
+            dispatchCompletedCounter.incrementAndGet();
         }
     }
 
@@ -225,10 +406,18 @@ public class OrderDispatchIntegrationTest {
     public void setUp() {
         testListener.dispatchPreparingCounter.set(0);
         testListener.orderDispatchedCounter.set(0);
+        testListener.dispatchCompletedCounter.set(0);
 
         // Wait until the partitions are assigned.
-        registry.getListenerContainers().stream().forEach(container ->
-                ContainerTestUtils.waitForAssignment(container, embeddedKafkaBroker.getPartitionsPerTopic()));
+//        registry.getListenerContainers().stream().forEach(container ->
+//                ContainerTestUtils.waitForAssignment(container, embeddedKafkaBroker.getPartitionsPerTopic()));
+
+        // Wait until the partitions are assigned.  The application listener container has one topic and the test
+        // listener container has multiple topics, so take that into account when awaiting for topic assignment.
+        registry.getListenerContainers().stream()
+                .forEach(container -> ContainerTestUtils.waitForAssignment(container,
+                        container.getContainerProperties().getTopics().length * embeddedKafkaBroker.getPartitionsPerTopic()));
+
     }
 
     @Test
@@ -264,6 +453,19 @@ public class OrderDispatchIntegrationTest {
                 .until(testListener.orderDispatchedCounter::get, equalTo(1));
     }
 
+
+    @Test
+    public void testDispatchCompletedListenerOnly() throws Exception {
+        DispatchCompleted dispatchCompleted=DispatchCompleted.builder()
+                .orderId(randomUUID())
+                .dispatchedDate(LocalDate.now().toString())
+                .build();
+        log.info("testDispatchCompletedListenerOnly ==>");
+        sendMessage(DISPATCH_TRACKING_TOPIC,randomUUID().toString(),dispatchCompleted);
+        await().atMost(5, TimeUnit.SECONDS)
+                .until(testListener.dispatchCompletedCounter::get,equalTo(1));
+    }
+
     private void sendMessage(String topic, String key, Object data) throws Exception {
         kafkaTemplate.send(MessageBuilder
                 .withPayload(data)
@@ -276,362 +478,246 @@ public class OrderDispatchIntegrationTest {
 ```
 
 
-## 1. Test Class Overview
+## 1. Class Overview
 
-| Component | Purpose | Key Details |
-|----------|--------|------------|
-| `@SpringBootTest` | Loads full Spring context | Uses `DispatchConfiguration` + `TestConfig` |
-| `@EmbeddedKafka` | Starts in-memory Kafka broker | No need for real Kafka |
-| `@DirtiesContext` | Resets context after tests | Avoids side effects |
-| `@ActiveProfiles("test")` | Uses test config | Isolated environment |
-| `OrderDispatchIntegrationTest` | Integration test class | Tests Kafka flow end-to-end |
+| Item | Description |
+|------|-------------|
+| Class Name | `OrderDispatchIntegrationTest` |
+| Test Type | Integration Test |
+| Purpose | Tests full Kafka flow with real embedded broker |
+| Scope | End-to-end message flow validation |
 
 ---
 
-## 2. Topics Used
+## 2. Key Annotations
+
+| Annotation | Meaning | Purpose |
+|------------|--------|---------|
+| `@SpringBootTest` | Loads Spring context | Full application testing |
+| `@EmbeddedKafka` | Starts in-memory Kafka | No external Kafka needed |
+| `@DirtiesContext` | Resets context after tests | Clean state |
+| `@ActiveProfiles("test")` | Uses test config | Isolated environment |
+
+---
+
+## 3. Topics Used
 
 | Constant | Topic Name | Purpose |
-|---------|------------|--------|
-| `ORDER_CREATED_TOPIC` | `order.created` | Input event |
+|----------|------------|---------|
+| `ORDER_CREATED_TOPIC` | `order.created` | Input topic |
 | `ORDER_DISPATCHED_TOPIC` | `order.dispatched` | Output event |
-| `DISPATCH_TRACKING_TOPIC` | `dispatch.tracking` | Intermediate event |
+| `DISPATCH_TRACKING_TOPIC` | `dispatch.tracking` | Tracking events |
 
 ---
 
-## 3. Injected Beans
+## 4. Dependencies (Autowired)
 
-| Bean | Type | Purpose |
-|------|------|--------|
-| `kafkaTemplate` | KafkaTemplate | Send messages to Kafka |
-| `embeddedKafkaBroker` | EmbeddedKafkaBroker | In-memory Kafka |
-| `registry` | KafkaListenerEndpointRegistry | Manage listeners |
-| `testListener` | KafkaTestListener | Consume and verify messages |
-
----
-
-## 4. Test Listener (Consumer)
-
-| Method | Topic | Purpose | Action |
-|--------|------|--------|--------|
-| `receiveDispatchPreparing` | `dispatch.tracking` | Validate DispatchPreparing event | Increment counter |
-| `receiveOrderDispatched` | `order.dispatched` | Validate OrderDispatched event | Increment counter |
-
-### Internal Counters
-
-| Counter | Type | Purpose |
-|--------|------|--------|
-| `dispatchPreparingCounter` | AtomicInteger | Tracks dispatch.tracking messages |
-| `orderDispatchedCounter` | AtomicInteger | Tracks order.dispatched messages |
+| Field | Type | Description |
+|------|------|-------------|
+| kafkaTemplate | `KafkaTemplate` | Sends messages |
+| embeddedKafkaBroker | `EmbeddedKafkaBroker` | In-memory Kafka |
+| registry | `KafkaListenerEndpointRegistry` | Manages listeners |
+| testListener | `KafkaTestListener` | Captures consumed messages |
 
 ---
 
-## 5. Setup Phase (`@BeforeEach`)
+## 5. KafkaTestListener (Inner Class)
 
-| Step | Action | Purpose |
-|------|--------|--------|
-| Reset counters | Set both counters to 0 | Clean state before test |
-| Wait for assignment | `ContainerTestUtils.waitForAssignment` | Ensure consumers are ready |
+### Purpose
 
----
-
-## 6. Test Cases
-
-### ▸ 6.1 testOrderDispatchFlow
-
-| Step | Action |
-|------|--------|
-| Create event | Build `OrderCreated` |
-| Send message | Send to `order.created` |
-| Expected | Full flow triggers downstream events |
+| Feature | Explanation |
+|--------|------------|
+| Acts as consumer | Listens to Kafka topics |
+| Validates messages | Ensures payload + key are not null |
+| Tracks counts | Uses counters to verify processing |
 
 ---
 
-### ▸ 6.2 testDispatchTrackingListenerOnly
+### Counters
 
-| Step | Action |
-|------|--------|
-| Create payload | `DispatchPreparing` |
-| Send message | Send to `dispatch.tracking` |
-| Verify | Wait until counter = 1 |
-| Tool | `Awaitility` |
-
----
-
-### ▸ 6.3 testOrderDispatchedListenerOnly
-
-| Step | Action |
-|------|--------|
-| Create payload | `OrderDispatched` |
-| Send message | Send to `order.dispatched` |
-| Verify | Wait until counter = 1 |
+| Counter | Tracks |
+|--------|--------|
+| dispatchPreparingCounter | `DispatchPreparing` events |
+| orderDispatchedCounter | `OrderDispatched` events |
+| dispatchCompletedCounter | `DispatchCompleted` events |
 
 ---
 
-## 7. Message Sending Logic
+### Handlers
 
-| Method | Purpose | Key Steps |
-|--------|--------|----------|
-| `sendMessage()` | Send Kafka message | |
-| Step 1 | Build message | `MessageBuilder.withPayload()` |
-| Step 2 | Set key | `KafkaHeaders.KEY` |
-| Step 3 | Set topic | `KafkaHeaders.TOPIC` |
-| Step 4 | Send | `kafkaTemplate.send()` |
-| Step 5 | Wait | `.get()` ensures sync |
+| Method | Payload Type | Purpose |
+|--------|-------------|--------|
+| `receiveDispatchPreparing` | `DispatchPreparing` | Handles start event |
+| `receiveOrderDispatched` | `OrderDispatched` | Handles dispatched event |
+| `receivedDispatchCompleted` | `DispatchCompleted` | Handles completion event |
 
 ---
 
-## 8. Testing Strategy
+## 6. Setup Method
 
-| Strategy | Explanation |
-|---------|-------------|
-| Embedded Kafka | Avoid external dependency |
-| Listener-based validation | Verify actual consumption |
-| Counters | Track message processing |
-| Awaitility | Handle async verification |
-| End-to-end flow | Tests real Kafka pipeline |
+### Purpose
 
----
-
-## 9. Key Concepts Covered
-
-| Concept | Explanation |
+| Action | Description |
 |--------|-------------|
-| Integration Testing | Tests full Kafka flow |
-| Producer → Consumer | End-to-end message flow |
-| Async Testing | Uses Awaitility |
-| Kafka Listeners | Consumes messages |
-| Embedded Broker | Lightweight Kafka for tests |
+| Reset counters | Set all counters to 0 |
+| Wait for partition assignment | Ensures Kafka listeners are ready |
 
 ---
 
-## 10. Overall Flow
-
-| Step | Flow |
-|------|------|
-| 1 | Send message via KafkaTemplate |
-| 2 | Kafka topic receives message |
-| 3 | Listener consumes message |
-| 4 | Assertions validate payload |
-| 5 | Counter increments |
-| 6 | Awaitility verifies result |
-
----
-
-## Final Summary
-
-| Area | Outcome |
-|------|--------|
-| Reliability | Ensures Kafka flow works |
-| Isolation | Uses embedded Kafka |
-| Validation | Confirms message consumption |
-| Async Handling | Proper wait mechanism |
-| Coverage | Tests both individual and full flow |
-
----
-
-✔ This test ensures your Kafka pipeline is working correctly from producer → topic → consumer  
-✔ It validates both **individual listeners** and **complete event flow**
-
----
-
-# DispatchServiceTest
-This test class verifies the behavior of `DispatchService` when producing Kafka messages under different scenarios.
-
+### Partition Assignment Logic
 
 ```java
-
-class DispatchServiceTest {
-
-    private DispatchService service;
-    private KafkaTemplate kafkaProducerMock;
-
-    @BeforeEach
-    void setUp() {
-        kafkaProducerMock = mock(KafkaTemplate.class);
-        service = new DispatchService(kafkaProducerMock);
-    }
-
-    @Test
-    void process_Success() throws Exception {
-        when(kafkaProducerMock.send(anyString(), anyString(), any(DispatchPreparing.class))).thenReturn(mock(CompletableFuture.class));
-        when(kafkaProducerMock.send(anyString(), anyString(), any(OrderDispatched.class))).thenReturn(mock(CompletableFuture.class));
-
-        String key = randomUUID().toString();
-        OrderCreated testEvent = TestEventData.buildOrderCreatedEvent(randomUUID(), randomUUID().toString());
-        service.process(key, testEvent);
-
-        verify(kafkaProducerMock, times(1)).send(eq("dispatch.tracking"), eq(key), any(DispatchPreparing.class));
-        verify(kafkaProducerMock, times(1)).send(eq("order.dispatched"), eq(key), any(OrderDispatched.class));
-    }
-
-    @Test
-    void process_DispatchTrackingProducerThrowsException() {
-        String key=randomUUID().toString();
-        OrderCreated testEvent = TestEventData.buildOrderCreatedEvent(randomUUID(), randomUUID().toString());
-        doThrow(new RuntimeException("dispatch tracking producer failure"))
-                .when(kafkaProducerMock)
-                .send(eq("dispatch.tracking"), eq(key), any(DispatchPreparing.class));
-        Exception exception = assertThrows(RuntimeException.class, () -> service.process(key,testEvent));
-
-        verify(kafkaProducerMock, times(1))
-                .send( eq("dispatch.tracking"), eq(key), any(DispatchPreparing.class));
-        verifyNoMoreInteractions(kafkaProducerMock);
-        assertThat(exception.getMessage(), equalTo("dispatch tracking producer failure"));
-
-    }
-
-    @Test
-    void process_OrderDispatchedThrowsException() {
-        String key=randomUUID().toString();
-        OrderCreated testEvent = TestEventData.buildOrderCreatedEvent(randomUUID(), randomUUID().toString());
-        when(kafkaProducerMock.send(anyString(), anyString(), any(DispatchPreparing.class))).thenReturn(mock(CompletableFuture.class));
-        doThrow(new RuntimeException("order dispatch producer failure")).when(kafkaProducerMock)
-                .send(eq("order.dispatched"), eq(key), any(OrderDispatched.class));
-        Exception exception=assertThrows(RuntimeException.class,()->service.process(key,testEvent));
-        verify(kafkaProducerMock,times(1)).send(eq("dispatch.tracking"),eq(key), any(DispatchPreparing.class));
-        verify(kafkaProducerMock,times(1)).send(eq("order.dispatched"), eq(key), any(OrderDispatched.class));
-
-        assertThat(exception.getMessage(), equalTo("order dispatch producer failure"));
-
-    }
-
-
-}
+ContainerTestUtils.waitForAssignment(container,
+  container.getContainerProperties().getTopics().length * embeddedKafkaBroker.getPartitionsPerTopic());
 ```
 
+**Why Important**
+Prevents test failure due to listener not ready
+Ensures messages are consumed
 
-## 1. Overall Test Structure
+## 7. Test Cases Summary
 
-| Component | Purpose |
-|----------|--------|
-| `DispatchService` | Service under test |
-| `KafkaTemplate` (mock) | Simulates Kafka producer |
-| `@BeforeEach` | Initializes mock + service before each test |
-| `process()` | Method being tested |
-| `key` | Kafka message key |
-| `OrderCreated` | Input event |
-| `DispatchPreparing` | First Kafka message |
-| `OrderDispatched` | Second Kafka message |
+| Test Method                         | Scenario              | Expected Outcome               |
+| ----------------------------------- | --------------------- | ------------------------------ |
+| `testOrderDispatchFlow`             | Full flow test        | All events should be processed |
+| `testDispatchTrackingListenerOnly`  | Only tracking topic   | DispatchPreparing consumed     |
+| `testOrderDispatchedListenerOnly`   | Only dispatched topic | OrderDispatched consumed       |
+| `testDispatchCompletedListenerOnly` | Only completed event  | DispatchCompleted consumed     |
 
----
 
-## 2. Happy Path — `process_Success`
+## 8. Detailed Test Flow
 
-| Step | Action | Expected Behavior |
-|------|--------|------------------|
-| 1 | Mock Kafka `send()` for both topics | Returns success (CompletableFuture) |
-| 2 | Call `service.process(key, event)` | Service processes normally |
-| 3 | Send to `dispatch.tracking` | Called once |
-| 4 | Send to `order.dispatched` | Called once |
-| 5 | No exception | Execution successful |
+### 8.1 `testOrderDispatchFlow`
 
-### ✔ Key Validation
+| Step | Description                     |
+| ---- | ------------------------------- |
+| 1    | Create `OrderCreated` event     |
+| 2    | Send to `order.created`         |
+| 3    | DispatchService processes event |
+| 4    | Produces 3 events               |
 
-| Verification | Meaning |
-|-------------|--------|
-| `times(1)` | Each message sent exactly once |
-| `eq(key)` | Same key used for both messages |
-| Topics | Correct topics used |
 
----
+**Expected Flow**
+```bash
+order.created
+     ↓
+DispatchPreparing → dispatch.tracking
+OrderDispatched → order.dispatched
+DispatchCompleted → dispatch.tracking
+```
 
-## 3. Failure Case 1 — Dispatch Tracking Fails
+### 8.2 `testDispatchTrackingListenerOnly`
 
-### `process_DispatchTrackingProducerThrowsException`
+| Step | Description                 |
+| ---- | --------------------------- |
+| 1    | Create `DispatchPreparing`  |
+| 2    | Send to `dispatch.tracking` |
+| 3    | Listener consumes it        |
 
-| Step | Action | Expected Behavior |
-|------|--------|------------------|
-| 1 | Mock exception on `dispatch.tracking` send | Throws RuntimeException |
-| 2 | Call `process()` | Exception occurs immediately |
-| 3 | First send attempt | Executed once |
-| 4 | Second send (`order.dispatched`) | ❌ NOT executed |
-| 5 | Exception propagated | Yes |
 
-### ✔ Key Validation
+**Verification**
+```java
+await().atMost(5, TimeUnit.SECONDS)
+       .until(counter == 1);
+```
 
-| Check | Result |
-|------|--------|
-| First send called | ✅ Yes |
-| Second send called | ❌ No |
-| `verifyNoMoreInteractions` | Ensures no extra calls |
-| Exception message | `"dispatch tracking producer failure"` |
+**Meaning**
+- Waits until message is consumed
+- Handles async Kafka behavior
 
-### ✔ Insight
-> If the first Kafka publish fails → system stops immediately (fail-fast behavior)
+### 8.3 `testOrderDispatchedListenerOnly`
 
----
+| Step | Description                |
+| ---- | -------------------------- |
+| 1    | Create `OrderDispatched`   |
+| 2    | Send to `order.dispatched` |
+| 3    | Listener consumes it       |
 
-## 4. Failure Case 2 — Order Dispatched Fails
 
-### `process_OrderDispatchedThrowsException`
+### 8.4 `testDispatchCompletedListenerOnly`
 
-| Step | Action | Expected Behavior |
-|------|--------|------------------|
-| 1 | First send (`dispatch.tracking`) succeeds | Returns future |
-| 2 | Second send throws exception | RuntimeException |
-| 3 | Call `process()` | Fails after second send |
-| 4 | First send executed | ✅ Yes |
-| 5 | Second send executed | ✅ Yes |
-| 6 | Exception propagated | Yes |
+| Step | Description                 |
+| ---- | --------------------------- |
+| 1    | Create `DispatchCompleted`  |
+| 2    | Send to `dispatch.tracking` |
+| 3    | Listener consumes it        |
 
-### ✔ Key Validation
 
-| Check | Result |
-|------|--------|
-| First send called | ✅ Yes |
-| Second send called | ✅ Yes |
-| Exception message | `"order dispatch producer failure"` |
+## 9. Message Sending Method
 
-### ✔ Insight
-> If second Kafka publish fails → first message already sent (partial success)
+```java
+kafkaTemplate.send(
+    MessageBuilder.withPayload(data)
+        .setHeader(KafkaHeaders.KEY, key)
+        .setHeader(KafkaHeaders.TOPIC, topic)
+        .build()
+).get();
 
----
+```
 
-## 5. Behavior Comparison
+| Part     | Purpose                   |
+| -------- | ------------------------- |
+| Payload  | Actual data               |
+| KEY      | Partition key             |
+| TOPIC    | Kafka topic               |
+| `.get()` | Waits for send completion |
 
-| Scenario | First Send | Second Send | Result |
-|----------|-----------|------------|--------|
-| Success | ✅ | ✅ | All messages sent |
-| First Failure | ❌ (fails) | ❌ | Stops immediately |
-| Second Failure | ✅ | ❌ (fails) | Partial success |
 
----
+## 10. Awaitility Usage
 
-## 6. Key Testing Concepts Used
+| Feature               | Purpose                  |
+| --------------------- | ------------------------ |
+| `await()`             | Wait for async operation |
+| `atMost(5 seconds)`   | Timeout                  |
+| `until(counter == 1)` | Condition                |
 
-| Concept | Purpose |
-|--------|--------|
-| `mock()` | Create fake KafkaTemplate |
-| `when().thenReturn()` | Mock successful calls |
-| `doThrow()` | Simulate failure |
-| `verify()` | Check method calls |
-| `verifyNoMoreInteractions()` | Ensure no extra calls |
-| `assertThrows()` | Validate exception |
-| `eq()` / `any()` | Argument matchers |
 
----
+✔ Prevents flaky tests
+✔ Ensures message consumption
 
-## 7. Core Takeaways
+## 11. Key Differences: Unit Test vs Integration Test
 
-- Service sends **two Kafka events sequentially**
-- First event → `dispatch.tracking`
-- Second event → `order.dispatched`
+| Aspect      | Unit Test        | Integration Test      |
+| ----------- | ---------------- | --------------------- |
+| Kafka       | Mocked           | Real (EmbeddedKafka)  |
+| Speed       | Fast             | Slower                |
+| Scope       | Single class     | Full flow             |
+| Reliability | Limited          | High                  |
+| Purpose     | Logic validation | End-to-end validation |
 
-### Behavior Rules
 
-| Rule | Meaning |
-|------|--------|
-| Fail-fast | If first send fails → stop |
-| No rollback | If second fails → first already sent |
-| Deterministic calls | Each send verified exactly once |
+## 12. Strengths of This Test
 
----
+| Strength            | Explanation                    |
+| ------------------- | ------------------------------ |
+| Real Kafka          | Uses embedded broker           |
+| Async handling      | Uses Awaitility                |
+| Full flow tested    | Covers full pipeline           |
+| Clean setup         | Waits for partition assignment |
+| Multi-event support | Handles multiple payload types |
 
-## Final Summary
 
-| Aspect | Outcome |
-|--------|--------|
-| Reliability | Depends on Kafka send success |
-| Error Handling | Exceptions propagated |
-| Message Flow | Sequential (not transactional) |
-| Testing Coverage | Success + both failure paths |
+## 13. Potential Improvements
+| Improvement                               | Reason                        |
+| ----------------------------------------- | ----------------------------- |
+| Add assertions in `testOrderDispatchFlow` | Currently no verification     |
+| Verify all 3 counters                     | Ensure full pipeline executed |
+| Add negative test cases                   | Test failure scenarios        |
+| Add ordering validation                   | Ensure event sequence         |
+
+
+## 14. Key Idea
+| Concept             | Explanation                               |
+| ------------------- | ----------------------------------------- |
+| Integration Test    | Tests real interaction between components |
+| Embedded Kafka      | Simulates real Kafka environment          |
+| Listener Validation | Confirms messages are consumed correctly  |
+| Async Testing       | Uses Awaitility to handle delays          |
+
+
+## 15. Final Summary
+**What This Test Ensures**
+- Kafka messages are produced correctly
+- Messages are consumed by listeners
+- End-to-end dispatch workflow works
+- System behaves correctly in async environment
