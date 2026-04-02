@@ -1,158 +1,107 @@
 # OrderCreateHandler 
 ```java
-@Slf4j
-@RequiredArgsConstructor
-@Component
-public class OrderCreateHandler {
 
-    private final DispatchService dispatchService;
-
-
-    @KafkaListener(
-            id = "orderConsumerClient",
-            topics = "order.created",
-            groupId = "dispatch.order.created.consumer",
-            containerFactory = "kafkaListenerContainerFactory"
-    )
-    public void listen(@Header(KafkaHeaders.RECEIVED_PARTITION) Integer partition,
-                       @Header(KafkaHeaders.RECEIVED_KEY) String key,
-                       @Payload OrderCreated payload) throws Exception {
-        log.info("Received message: partition: {} - key: {} - payload: {}", partition, key, payload);
-        try {
-            dispatchService.process(key, payload);
-        } catch (Exception e) {
-            log.error("Processing failure : {}", e);
-        }
-    }
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class DispatchCompleted {
+    UUID orderId;
+    String dispatchedDate;
 }
 
 ```
+# DispatchCompleted — Summary Tables
 
 ## 1. Class Overview
 
-| Component | Description |
-|----------|-------------|
-| Class Name | `OrderCreateHandler` |
-| Annotation | `@Component` → Spring-managed bean |
-| Logging | `@Slf4j` → Enables logging |
-| Constructor Injection | `@RequiredArgsConstructor` → Injects dependencies automatically |
-| Dependency | `DispatchService` → Handles business logic |
+| Item | Description |
+|-----|-------------|
+| Class Name | `DispatchCompleted` |
+| Purpose | Represents an event/message indicating that an order dispatch is completed |
+| Type | POJO (Plain Java Object) |
+| Usage | Typically used in Kafka messaging or event-driven systems |
 
 ---
 
-## 2. Kafka Listener Configuration
+## 2. Fields
 
-| Attribute | Value | Meaning |
-|----------|------|--------|
-| Listener ID | `orderConsumerClient` | Unique identifier for this consumer |
-| Topic | `order.created` | Kafka topic being consumed |
-| Group ID | `dispatch.order.created.consumer` | Consumer group name |
-| Container Factory | `kafkaListenerContainerFactory` | Custom Kafka configuration (deserialization, error handling, etc.) |
+| Field Name | Type | Description |
+|-----------|------|-------------|
+| orderId | `UUID` | Unique identifier of the order |
+| dispatchedDate | `String` | Date when the order was dispatched |
 
 ---
 
-## 3. Method: `listen(...)`
+## 3. Lombok Annotations
 
-| Parameter | Source | Purpose |
-|----------|--------|---------|
-| `partition` | `@Header(KafkaHeaders.RECEIVED_PARTITION)` | Partition number from which message is received |
-| `key` | `@Header(KafkaHeaders.RECEIVED_KEY)` | Message key (used for partitioning) |
-| `payload` | `@Payload` | Actual message data (`OrderCreated`) |
-
----
-
-## 4. Message Processing Flow
-
-| Step | Action | Description |
-|-----|--------|-------------|
-| 1 | Message Received | Kafka sends message to listener |
-| 2 | Logging | Logs partition, key, and payload |
-| 3 | Business Call | Calls `dispatchService.process(key, payload)` |
-| 4 | Exception Handling | Catches any exception during processing |
-| 5 | Error Logging | Logs error if processing fails |
+| Annotation | Meaning | Benefit |
+|-----------|--------|--------|
+| `@Data` | Generates getters, setters, `toString()`, `equals()`, `hashCode()` | Reduces boilerplate code |
+| `@Builder` | Enables builder pattern for object creation | Cleaner and flexible object creation |
+| `@AllArgsConstructor` | Generates constructor with all fields | Easy initialization |
+| `@NoArgsConstructor` | Generates default constructor | Required for serialization/deserialization |
 
 ---
 
-## 5. Logging Behavior
+## 4. Object Creation Methods
 
-| Log Type | Example | Purpose |
-|---------|--------|---------|
-| Info Log | `"Received message: partition: {} - key: {} - payload: {}"` | Tracks incoming messages |
-| Error Log | `"Processing failure : {}"` | Captures processing issues |
+### ▸ Using Constructor
 
----
-
-## 6. Error Handling Strategy
-
-| Aspect | Behavior |
-|-------|----------|
-| Try-Catch | Wraps business logic |
-| Failure Handling | Logs error only |
-| Retry | ❌ Not handled here (depends on container factory) |
-| Message Acknowledgement | Kafka may still commit offset (depends on config) |
-
-⚠️ Note: Since exception is caught and not re-thrown →  
-Kafka may treat message as **successfully consumed**
+| Method | Example |
+|-------|--------|
+| All args constructor | `new DispatchCompleted(orderId, "2026-04-02")` |
+| No args constructor | `new DispatchCompleted()` then set values |
 
 ---
 
-## 7. Dependency Responsibility
+### ▸ Using Builder Pattern
 
-| Component | Responsibility |
-|----------|----------------|
-| `OrderCreateHandler` | Receives Kafka messages |
-| `DispatchService` | Processes business logic |
-
----
-
-## 8. Key Kafka Concepts Used
-
-| Concept | Usage |
-|--------|------|
-| Consumer Group | `dispatch.order.created.consumer` |
-| Partition | Extracted using header |
-| Message Key | Used for partition routing |
-| Listener | `@KafkaListener` |
-| Payload Mapping | JSON → `OrderCreated` object |
-
----
-
-## 9. Important Observations
-
-| Observation | Explanation |
-|------------|-------------|
-| Tight Coupling | Handler directly depends on service |
-| No Retry Logic | Errors only logged |
-| No Dead Letter Handling | Not implemented here |
-| Offset Risk | Messages may be lost if error occurs |
-| Good Logging | Helps debugging |
-
----
-
-## 10. Summary
-
-| Area | Outcome |
+| Step | Example |
 |-----|--------|
-| Message Consumption | Done via `@KafkaListener` |
-| Processing | Delegated to `DispatchService` |
-| Error Handling | Basic (logging only) |
-| Scalability | Controlled by Kafka consumer group |
-| Reliability | Needs improvement (retry/DLT) |
+| Build object | `DispatchCompleted.builder().orderId(id).dispatchedDate("2026-04-02").build();` |
+
+✔ Preferred in modern code  
+✔ Improves readability  
+✔ Avoids constructor confusion
 
 ---
 
-## Final Insight
+## 5. Typical Usage in Kafka/Event Flow
 
-This class is a **Kafka Consumer Adapter**:
+| Step | Description |
+|-----|-------------|
+| Event Produced | When dispatch is completed |
+| Message Sent | Sent to a Kafka topic (e.g., `order.dispatched`) |
+| Event Consumed | Other services consume and process it |
 
-✔ Receives messages  
-✔ Logs metadata  
-✔ Delegates processing  
+---
+
+## 6. Key Characteristics
+
+| Feature | Explanation |
+|--------|------------|
+| Immutable-style usage | Often used via builder (though not strictly immutable) |
+| Serializable | Can be converted to JSON for Kafka |
+| Lightweight | Only contains required event data |
+| Event-driven | Represents a domain event |
+
+---
+
+## 7. Example JSON Representation
+
+```json
+{
+  "orderId": "123e4567-e89b-12d3-a456-426614174000",
+  "dispatchedDate": "2026-04-02"
+}
+```
 
 -----
 # DispatchService
 
 ```java
+
 
 @Slf4j
 @RequiredArgsConstructor
@@ -177,183 +126,165 @@ public class DispatchService {
                 .notes("Dispatched: "+orderCreated.getItem())
                 .build();
         kafkaProducer.send(ORDER_DISPATCHED_TOPIC,key,orderDispatched).get();
+
+        DispatchCompleted dispatchCompleted= DispatchCompleted.builder()
+                .orderId(orderCreated.getOrderId())
+                .dispatchedDate(LocalDate.now().toString())
+                .build();
+        kafkaProducer.send(DISPATCH_TRACKING_TOPIC,key,dispatchCompleted).get();
+
         log.info("Sent messages: key: {}  - orderId:{} - processedById :{}", key, orderCreated.getOrderId(), APPLICATION_ID);
 
 
     }
 }
 ```
-
+# DispatchService — Summary Tables
 
 ## 1. Class Overview
 
-| Component | Description |
-|----------|-------------|
+| Item | Description |
+|-----|-------------|
 | Class Name | `DispatchService` |
-| Annotation | `@Service` → Business logic layer |
-| Logging | `@Slf4j` → Enables logging |
-| Constructor Injection | `@RequiredArgsConstructor` |
-| Dependency | `KafkaTemplate<String, Object>` → Produces messages to Kafka |
+| Annotation | `@Service` (Spring service layer component) |
+| Purpose | Processes an order and sends multiple Kafka events |
+| Responsibility | Orchestrates dispatch workflow using Kafka |
 
 ---
 
-## 2. Constants
+## 2. Annotations Used
 
-| Constant | Value | Purpose |
-|---------|------|---------|
-| `DISPATCH_TRACKING_TOPIC` | `dispatch.tracking` | Topic for tracking dispatch preparation |
-| `ORDER_DISPATCHED_TOPIC` | `order.dispatched` | Topic for final dispatched event |
-| `APPLICATION_ID` | `randomUUID()` | Unique identifier of this service instance |
-
----
-
-## 3. Method: `process(...)`
-
-| Parameter | Type | Purpose |
-|----------|------|---------|
-| `key` | `String` | Kafka message key (ensures partition consistency) |
-| `orderCreated` | `OrderCreated` | Incoming event payload |
+| Annotation | Meaning | Benefit |
+|-----------|--------|--------|
+| `@Slf4j` | Adds logger (`log`) | Easy logging |
+| `@RequiredArgsConstructor` | Generates constructor for final fields | Dependency injection |
+| `@Service` | Marks as Spring service | Managed by Spring container |
 
 ---
 
-## 4. Processing Flow
+## 3. Constants
 
-| Step | Action | Description |
-|-----|--------|-------------|
-| 1 | Build Object | Create `DispatchPreparing` event |
-| 2 | Send Event | Send to `dispatch.tracking` topic |
-| 3 | Wait | `.get()` blocks until send is complete |
-| 4 | Build Object | Create `OrderDispatched` event |
-| 5 | Send Event | Send to `order.dispatched` topic |
-| 6 | Wait | `.get()` ensures delivery |
-| 7 | Log | Logs success details |
+| Constant | Value | Description |
+|----------|------|-------------|
+| `DISPATCH_TRACKING_TOPIC` | `"dispatch.tracking"` | Topic for tracking dispatch stages |
+| `ORDER_DISPATCHED_TOPIC` | `"order.dispatched"` | Topic for final dispatch event |
+| `APPLICATION_ID` | `randomUUID()` | Unique ID for this service instance |
 
 ---
 
-## 5. Event Creation
+## 4. Dependency
+
+| Field | Type | Description |
+|------|------|-------------|
+| kafkaProducer | `KafkaTemplate<String, Object>` | Sends messages to Kafka |
+
+---
+
+## 5. Method Overview
+
+| Method | Description |
+|-------|-------------|
+| `process(String key, OrderCreated orderCreated)` | Handles order processing and sends 3 Kafka events |
+
+---
+
+## 6. Event Flow (Step-by-Step)
+
+| Step | Event | Topic | Description |
+|-----|------|-------|-------------|
+| 1 | `DispatchPreparing` | `dispatch.tracking` | Indicates dispatch started |
+| 2 | `OrderDispatched` | `order.dispatched` | Confirms order dispatched |
+| 3 | `DispatchCompleted` | `dispatch.tracking` | Marks dispatch completed |
+
+---
+
+## 7. Event Details
 
 ### ▸ DispatchPreparing
 
-| Field | Value Source |
-|------|-------------|
-| `orderId` | From `orderCreated.getOrderId()` |
+| Field | Value |
+|------|------|
+| orderId | From `orderCreated` |
 
 ---
 
 ### ▸ OrderDispatched
 
-| Field | Value Source |
-|------|-------------|
-| `orderId` | From `orderCreated.getOrderId()` |
-| `processedById` | `APPLICATION_ID` |
-| `notes` | `"Dispatched: " + orderCreated.getItem()` |
+| Field | Value |
+|------|------|
+| orderId | From `orderCreated` |
+| processedById | `APPLICATION_ID` |
+| notes | `"Dispatched: " + item` |
 
 ---
 
-## 6. Kafka Producer Behavior
+### ▸ DispatchCompleted
 
-| Aspect | Behavior |
-|-------|----------|
-| Producer | `KafkaTemplate` |
-| Key Usage | Same key used for both topics |
-| Partitioning | Ensures same partition for same key |
-| Send Mode | Synchronous (`.get()`) |
-| Reliability | High (waits for broker acknowledgment) |
+| Field | Value |
+|------|------|
+| orderId | From `orderCreated` |
+| dispatchedDate | Current date (`LocalDate.now()`) |
 
 ---
 
-## 7. Synchronous Send Impact
+## 8. Kafka Send Behavior
 
-| Advantage | Disadvantage |
-|----------|-------------|
-| Guaranteed delivery confirmation | Slower performance |
-| Easier error handling | Blocks thread |
-| Better consistency | Not scalable under high load |
+| Feature | Explanation |
+|--------|------------|
+| `.send()` | Sends message to Kafka |
+| `.get()` | Waits for acknowledgment (synchronous) |
+| Key Usage | Ensures same partition ordering |
 
----
-
-## 8. Logging
-
-| Log Type | Example | Purpose |
-|---------|--------|---------|
-| Info Log | `"Sent messages: key: {} - orderId:{} - processedById:{}"` | Tracks successful processing |
+✔ Guarantees message delivery before next step  
+✔ Maintains order of events
 
 ---
 
-## 9. Error Handling
+## 9. Logging
 
-| Aspect | Behavior |
-|-------|----------|
-| Exception Handling | Method throws `Exception` |
-| Retry | ❌ Not implemented |
-| Transaction | ❌ Not transactional |
-| Failure Scenario | First send may succeed, second may fail |
+| Log Statement | Purpose |
+|--------------|--------|
+| `log.info(...)` | Tracks processed order details |
 
-⚠️ Risk:
-- Partial processing possible (inconsistent state)
+Logged Data:
+- key
+- orderId
+- processedById
 
 ---
 
-## 10. Message Flow Across Topics
+## 10. Processing Flow Diagram (Conceptual)
 
-| Step | Topic | Event |
-|-----|------|-------|
-| 1 | `dispatch.tracking` | `DispatchPreparing` |
-| 2 | `order.dispatched` | `OrderDispatched` |
-
-Flow:
-
-order.created → DispatchService → dispatch.tracking
+```bash
+OrderCreated
 ↓
-order.dispatched
-
-
----
-
-## 11. Key Design Observations
-
-| Observation | Explanation |
-|------------|-------------|
-| Event Chaining | One input → multiple output events |
-| Same Key Usage | Maintains ordering across topics |
-| No Transaction | No guarantee both messages succeed together |
-| Blocking Calls | Reduces throughput |
-| Stateless Service | Uses constant `APPLICATION_ID` |
+DispatchPreparing → dispatch.tracking
+↓
+OrderDispatched → order.dispatched
+↓
+DispatchCompleted → dispatch.tracking
+```
 
 ---
 
-## 12. Improvements (Production)
+## 11. Key Characteristics
 
-| Area | Suggestion |
-|-----|------------|
-| Reliability | Use Kafka Transactions |
-| Performance | Use async send (remove `.get()`) |
-| Error Handling | Add retry / DLT |
-| Observability | Add tracing (e.g., correlationId) |
-| Idempotency | Prevent duplicate processing |
-
----
-
-## 13. Summary
-
-| Area | Outcome |
-|-----|--------|
-| Role | Produces events after processing |
-| Input | `OrderCreated` |
-| Output | Two Kafka events |
-| Processing | Sequential and synchronous |
-| Reliability | Medium (no transaction) |
-| Scalability | Limited due to blocking |
+| Feature | Explanation |
+|--------|------------|
+| Sequential Processing | Events sent in order |
+| Synchronous Calls | Uses `.get()` to block until send completes |
+| Event-Driven | Produces events for other services |
+| Traceability | Multiple events track lifecycle |
 
 ---
 
-## Final Insight
+## 12. Key Idea
 
-This service acts as an **Event Producer / Processor**:
-
-✔ Transforms incoming event  
-✔ Produces multiple downstream events  
-✔ Ensures ordering using same key  
+| Concept | Explanation |
+|--------|------------|
+| Orchestration Service | Controls full dispatch workflow |
+| Event Chain | Multiple events represent stages |
+| Reliable Messaging | Ensures delivery using synchronous Kafka sends |
 
 
 
@@ -417,7 +348,7 @@ kafka-console-producer \
 **▶️ Sample Message**
 
 ```bash
-"456":{"orderId":"550e8400-e29b-41d4-a716-446655440000","item":"book-456"}
+"1":{"orderId":"550e8400-e29b-41d4-a716-446655440001","item":"book-001"} 
 ```
 
 ## 🔄 4. Verify Application Processing
@@ -426,7 +357,7 @@ kafka-console-producer \
 Check your Spring Boot console logs:
 
 ```bash
-Sent messages: key: 456  - orderId:550e8400-e29b-41d4-a716-446655440000 - processedById :f5d0d044-8ea3-405f-b25e-b59392fa764a
+Sent messages: key: "1"  - orderId:550e8400-e29b-41d4-a716-446655440001 - processedById :09ffecfe-d792-499d-8060-ed3198a5663d
 ```
 
 **✔ Confirms:**
@@ -523,325 +454,3 @@ This test shows how Kafka behaves when:
 - Kafka automatically rebalances partitions when a new consumer joins or an existing consumer stops
 
 ---
-
-## 1. Increase Topic Partitions
-
-### Describe the Current Topic
-
-```bash
-bin/kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic order.created
-```
-
-**Output**
-```bash
-Topic: order.created    TopicId: RfCmltvjThagIZ-TsqlTjw PartitionCount: 1       ReplicationFactor: 1    Configs:
-        Topic: order.created    Partition: 0    Leader: 1       Replicas: 1     Isr: 1
-
-```        
-**Meaning**
-| Field             | Value           | Meaning                             |
-| ----------------- | --------------- | ----------------------------------- |
-| Topic             | `order.created` | Topic name                          |
-| PartitionCount    | `1`             | Currently only one partition exists |
-| ReplicationFactor | `1`             | Only one replica                    |
-| Partition         | `0`             | The only available partition        |
-
-
-
-## 2. Alter the Topic to 5 Partitions
-```bash
-bin/kafka-topics.sh --bootstrap-server localhost:9092 --alter --topic order.created --partitions 5
-```
-> Kafka allows increasing partitions, but not decreasing them.
-
-## 3. Verify the Updated Partition Count
-```bash
-bin/kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic order.created
-```
-
-**Output**
-```bash
-Topic: order.created    TopicId: RfCmltvjThagIZ-TsqlTjw PartitionCount: 5       ReplicationFactor: 1    Configs:
-        Topic: order.created    Partition: 0    Leader: 1       Replicas: 1     Isr: 1
-        Topic: order.created    Partition: 1    Leader: 1       Replicas: 1     Isr: 1
-        Topic: order.created    Partition: 2    Leader: 1       Replicas: 1     Isr: 1
-        Topic: order.created    Partition: 3    Leader: 1       Replicas: 1     Isr: 1
-        Topic: order.created    Partition: 4    Leader: 1       Replicas: 1     Isr: 1
-
-```
-
-**Summary Table**
-
-| Partition | Leader | Replicas | ISR |
-| --------- | ------ | -------- | --- |
-| 0         | 1      | 1        | 1   |
-| 1         | 1      | 1        | 1   |
-| 2         | 1      | 1        | 1   |
-| 3         | 1      | 1        | 1   |
-| 4         | 1      | 1        | 1   |
-
-## 4. Run Two Application Instances
-**App1**
-
-Start the first Spring Boot application:
-```bash
-mvn spring-boot:run
-```
-
-
-**App1 Console Output**
-```bash
-dispatch.order.created.consumer: partitions assigned: [order.created-0, order.created-1, order.created-2, order.created-3, order.created-4]
-```
-
-**Meaning**
-
-Since only one consumer instance is running in the group, it receives all 5 partitions.
-
-**App2**
-
-Now start the second application instance.
-
-**App2 Console Output**
-
-```bash
-dispatch.order.created.consumer: partitions assigned: [order.created-3, order.created-4]
-```
-
-**App1 Console After Rebalance**
-```bash
-dispatch.order.created.consumer: partitions assigned: [order.created-0, order.created-1, order.created-2]
-
-```
-## 5. Automatic Rebalancing
-
-When **App2** joins the same consumer group, Kafka automatically redistributes partitions.
-
-**Before App2 Joined**
-| Application | Assigned Partitions |
-| ----------- | ------------------- |
-| App1        | 0, 1, 2, 3, 4       |
-
-
-**After App2 Joined**
-| Application | Assigned Partitions |
-| ----------- | ------------------- |
-| App1        | 0, 1, 2             |
-| App2        | 3, 4                |
-
-
-**Explanation**
-
-This is called **rebalance**.
-
-Kafka rebalances when:
-
-- a new consumer joins the group
-- a consumer leaves the group
-- a consumer dies
-- partitions change
-
-## 6. List Consumer Groups
-
-```bash
-kafka-consumer-groups --bootstrap-server localhost:9092 --list
-```
-
-**Output**
-```bash
-dispatch.order.created.consumer
-console-consumer-41373
-console-consumer-95726
-dispatch.order.created.consumer2
-console-consumer-13198
-```
-
-**Summary**
-
-| Consumer Group                     | Description                     |
-| ---------------------------------- | ------------------------------- |
-| `dispatch.order.created.consumer`  | Main Spring Boot consumer group |
-| `dispatch.order.created.consumer2` | Another application group       |
-| `console-consumer-*`               | Kafka console consumer groups   |
-
-
-
-**7. Describe the Consumer Group**
-
-```bash
-kafka-consumer-groups --bootstrap-server localhost:9092 --describe --group dispatch.order.created.consumer
-```
-
-**Output**
-```bash
-GROUP                           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                                     HOST            CLIENT-ID
-dispatch.order.created.consumer order.created   0          46              46              0               consumer-dispatch.order.created.consumer-1-1560b722-d0d5-4e00-b501-75fe86b3353d /192.168.65.1   consumer-dispatch.order.created.consumer-1
-dispatch.order.created.consumer order.created   1          0               0               0               consumer-dispatch.order.created.consumer-1-1560b722-d0d5-4e00-b501-75fe86b3353d /192.168.65.1   consumer-dispatch.order.created.consumer-1
-dispatch.order.created.consumer order.created   2          0               0               0               consumer-dispatch.order.created.consumer-1-1560b722-d0d5-4e00-b501-75fe86b3353d /192.168.65.1   consumer-dispatch.order.created.consumer-1
-dispatch.order.created.consumer order.created   3          0               0               0               consumer-dispatch.order.created.consumer-1-33b1284e-2a1e-449a-92ff-c9dd9ac5e343 /192.168.65.1   consumer-dispatch.order.created.consumer-1
-dispatch.order.created.consumer order.created   4          0               0               0               consumer-dispatch.order.created.consumer-1-33b1284e-2a1e-449a-92ff-c9dd9ac5e343 /192.168.65.1   consumer-dispatch.order.created.consumer-1
-```
-
-**Interpretation Table**
-
-| Partition | Consumer Instance | Offset | Lag | Meaning             |
-| --------- | ----------------- | ------ | --- | ------------------- |
-| 0         | Consumer 1        | 46     | 0   | Fully consumed      |
-| 1         | Consumer 1        | 0      | 0   | No pending messages |
-| 2         | Consumer 1        | 0      | 0   | No pending messages |
-| 3         | Consumer 2        | 0      | 0   | No pending messages |
-| 4         | Consumer 2        | 0      | 0   | No pending messages |
-
-
-**Key Point**
-
-Two different `CONSUMER-IDs `show that **two application instances** are actively sharing the same topic partitions under one consumer group.
-
-## 8. Run Consumer and Producer
-**Consumer**
-
-Listen to the downstream topic:
-
-```bash
-kafka-console-consumer --bootstrap-server localhost:9092 --topic order.dispatched --property print.key=true --property key.separator=:
-```
-
-**Producer**
-
-Send input messages to the source topic:
-```bash
-kafka-console-producer --bootstrap-server localhost:9092 --topic order.created --property parse.key=true --property key.separator=:
-```
-
-## 9. Sample Messages
-```bash
-"456":{"orderId":"550e8400-e29b-41d4-a716-446655440000","item":"book-456"}
-"456":{"orderId":"550e8400-e29b-41d4-a716-446655440001","item":"book-456"}
-"456":{"orderId":"550e8400-e29b-41d4-a716-446655440002","item":"book-456"}
-
-"789":{"orderId":"550e8400-e29b-41d4-a716-446655440009","item":"book-789"}
-"789":{"orderId":"550e8400-e29b-41d4-a716-446655440007","item":"book-789"}
-```
-
-## 10. Important Observation About Message Keys
-**Summary Table**
-| Key   | Expected Behavior                                    |
-| ----- | ---------------------------------------------------- |
-| `456` | All messages with key `456` go to the same partition |
-| `789` | All messages with key `789` go to the same partition |
-
-
-**Explanation**
-
-Kafka uses the message key to decide the partition.
-
-So:
-- same key → same partition
-- same partition → same consumer instance within the group
-- ordering is preserved for messages with the same key
-
-This means all messages with key `456` are processed in order by one consumer, and all messages with key 789 are processed in order by one consumer.
-
-## 11. Stop App1 and Observe Rebalance
-
-Now stop `App1`.
-
-Kafka will automatically detect that one consumer is gone and rebalance again.
-
-**Expected Result**
-| Application | Assigned Partitions After App1 Stops |
-| ----------- | ------------------------------------ |
-| App2        | 0, 1, 2, 3, 4                        |
-
-
-**Explanation**
-
-When App1 leaves:
-- Kafka marks it as unavailable
-- partitions owned by App1 become unassigned
-- App2 takes over those partitions
-- message consumption continues without manual intervention
-
-This demonstrates Kafka's fault tolerance.
-
-## 12. Overall Summary
-
-| Scenario              | Result                                       |
-| --------------------- | -------------------------------------------- |
-| 1 partition + 1 app   | One consumer handles all messages            |
-| 5 partitions + 1 app  | One consumer handles all 5 partitions        |
-| 5 partitions + 2 apps | Partitions shared across two apps            |
-| New app joins         | Kafka rebalances automatically               |
-| One app stops         | Remaining app takes over partitions          |
-| Same key used         | Messages go to same partition and keep order |
-
-
-## 13. Key Concepts Demonstrated
-| Concept             | What You Observed                                           |
-| ------------------- | ----------------------------------------------------------- |
-| Partition Scaling   | Topic increased from 1 to 5 partitions                      |
-| Consumer Group      | Two apps share same group                                   |
-| Rebalancing         | Partitions redistributed automatically                      |
-| Parallel Processing | Different partitions can be consumed by different instances |
-| Fault Tolerance     | Remaining consumer takes over after failure                 |
-| Key-based Routing   | Same key always goes to same partition                      |
-
-
-## Final Insight
-
-This test proves that Kafka consumer groups provide:
-- **scalability** through multiple partitions
-- **parallel processing** through multiple consumer instances
-- **ordering** for messages with the same key
-- **fault tolerance** through automatic rebalancing
-
-In short:
-
->More partitions allow more parallelism, and Kafka automatically balances the load across active consumers in the same group.
-
-
-```bash
-"1":{"orderId":"550e8400-e29b-41d4-a716-446655440001","item":"book-001"} 
-"2":{"orderId":"550e8400-e29b-41d4-a716-446655440001","item":"book-456"} 
-"3":{"orderId":"550e8400-e29b-41d4-a716-446655440001","item":"book-456"} 
-"4":{"orderId":"550e8400-e29b-41d4-a716-446655440001","item":"book-456"} 
-"5":{"orderId":"550e8400-e29b-41d4-a716-446655440001","item":"book-456"} 
-"6":{"orderId":"550e8400-e29b-41d4-a716-446655440001","item":"book-456"} 
-```
-
-# PlantUML Diagram — Kafka Multiple Partitions and Rebalancing
-
-Below is a colorful sequence-style diagram that explains:
-
-- topic partition increase
-- App1 consuming all partitions first
-- App2 joining the same consumer group
-- Kafka rebalancing partitions
-- producer sending keyed messages
-- App1 stopping
-- App2 taking over all partitions
-
-![alt text](image-1.png)
-
-## What this diagram explains
-| Topic             | Meaning                                                     |
-| ----------------- | ----------------------------------------------------------- |
-| Partition scaling | More partitions allow more consumers to work in parallel    |
-| Consumer group    | App1 and App2 belong to the same group                      |
-| Rebalancing       | Kafka redistributes partitions when consumers join or leave |
-| Key-based routing | Same key always goes to the same partition                  |
-| Fault tolerance   | If one app stops, the other takes over                      |
-
-
-#  Component Diagram — Kafka Consumer Group with Multiple Partitions
-
-Below is a colorful **component diagram** to explain:
-
-- producer sends messages to `order.created`
-- topic has multiple partitions
-- two Spring Boot apps are in the same consumer group
-- partitions are shared between consumers
-- processed messages are sent to downstream topics
-- rebalance happens when one app joins or leaves
-
-![alt text](image-2.png)
