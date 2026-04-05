@@ -3,3 +3,6 @@ spring:
     name: dispatch
   kafka:
     bootstrap-servers: localhost:9092
+
+dispatch:
+  stockServiceEndpoint: http://localhost:9001/api/stock

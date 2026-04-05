@@ -1,5 +1,6 @@
 package dev.lydtech.dispatch.service;
 
+import dev.lydtech.dispatch.client.StockServiceClient;
 import dev.lydtech.dispatch.message.DispatchCompleted;
 import dev.lydtech.dispatch.message.DispatchPreparing;
 import dev.lydtech.dispatch.message.OrderCreated;
@@ -24,27 +25,35 @@ public class DispatchService {
     private static final UUID APPLICATION_ID=randomUUID();
 
     private final KafkaTemplate<String,Object> kafkaProducer;
+    private final StockServiceClient stockServiceClient;
 
     public void process(String key,OrderCreated orderCreated) throws Exception{
-        DispatchPreparing dispatchPreparing= DispatchPreparing.builder()
-                .orderId(orderCreated.getOrderId())
-                .build();
-        kafkaProducer.send(DISPATCH_TRACKING_TOPIC, key,dispatchPreparing).get();
+        String available=stockServiceClient.checkAvailability(orderCreated.getItem());
+        if(Boolean.valueOf(available)){
+            DispatchPreparing dispatchPreparing= DispatchPreparing.builder()
+                    .orderId(orderCreated.getOrderId())
+                    .build();
+            kafkaProducer.send(DISPATCH_TRACKING_TOPIC, key,dispatchPreparing).get();
 
-        OrderDispatched orderDispatched= OrderDispatched.builder()
-                .orderId(orderCreated.getOrderId())
-                .processedById(APPLICATION_ID)
-                .notes("Dispatched: "+orderCreated.getItem())
-                .build();
-        kafkaProducer.send(ORDER_DISPATCHED_TOPIC,key,orderDispatched).get();
+            OrderDispatched orderDispatched= OrderDispatched.builder()
+                    .orderId(orderCreated.getOrderId())
+                    .processedById(APPLICATION_ID)
+                    .notes("Dispatched: "+orderCreated.getItem())
+                    .build();
+            kafkaProducer.send(ORDER_DISPATCHED_TOPIC,key,orderDispatched).get();
 
-        DispatchCompleted dispatchCompleted= DispatchCompleted.builder()
-                .orderId(orderCreated.getOrderId())
-                .dispatchedDate(LocalDate.now().toString())
-                .build();
-        kafkaProducer.send(DISPATCH_TRACKING_TOPIC,key,dispatchCompleted).get();
+            DispatchCompleted dispatchCompleted= DispatchCompleted.builder()
+                    .orderId(orderCreated.getOrderId())
+                    .dispatchedDate(LocalDate.now().toString())
+                    .build();
+            kafkaProducer.send(DISPATCH_TRACKING_TOPIC,key,dispatchCompleted).get();
 
-        log.info("Sent messages: key: {}  - orderId:{} - processedById :{}", key, orderCreated.getOrderId(), APPLICATION_ID);
+            log.info("Sent messages: key: {}  - orderId:{} - processedById :{}", key, orderCreated.getOrderId(), APPLICATION_ID);
+
+        }else{
+            log.info("Item: {} is unavailable.", orderCreated.getItem());
+        }
+
 
 
     }
