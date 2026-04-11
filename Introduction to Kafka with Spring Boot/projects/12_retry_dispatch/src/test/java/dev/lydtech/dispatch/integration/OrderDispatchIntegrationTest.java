@@ -44,6 +44,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
+import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
+
 @Slf4j
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
@@ -177,6 +179,7 @@ class OrderDispatchIntegrationTest {
 
     @Test
     void testDispatchTrackingListenerOnly() throws Exception {
+
         DispatchPreparing payload = DispatchPreparing.builder()
                 .orderId(randomUUID())
                 .build();
@@ -211,6 +214,50 @@ class OrderDispatchIntegrationTest {
         await().atMost(5, TimeUnit.SECONDS)
                 .until(testListener.dispatchCompletedCounter::get, equalTo(1));
     }
+
+    /**
+     * The call to the stock service is stubbed to return a 400 Bad Request which results in a not-retryable exception
+     * being thrown, so the outbound events are never sent.
+     */
+    @Test
+    public void testOrderDispatchFlow_NotRetryableException() throws Exception {
+        stubWiremock("/api/stock?item=my-item", 400, "Bad Request");
+        OrderCreated orderCreated=TestEventData.buildOrderCreatedEvent(randomUUID(), randomUUID().toString());
+
+        sendMessage(ORDER_CREATED_TOPIC, randomUUID().toString(),orderCreated);
+        TimeUnit.SECONDS.sleep(3);
+
+        assertThat(testListener.dispatchPreparingCounter.get(), equalTo(0));
+        assertThat(testListener.orderDispatchedCounter.get(),equalTo(0));
+        assertThat(testListener.dispatchCompletedCounter.get(),equalTo(0));
+
+    }
+
+    /**
+     * The call to the stock service is stubbed to initially return a 503 Service Unavailable response, resulting in a
+     * retryable exception being thrown.  On the subsequent attempt it is stubbed to then succeed, so the outbound events
+     * are sent.
+     */
+    @Test
+    public void testOrderDispatchFlow_RetryThenSuccess() throws Exception {
+        stubWiremock("/api/stock?item=my-item",500,"Service unavailable","failOnce",STARTED ,"succeedNextTime");
+        stubWiremock("/api/stock?item=my-item",200,"true","failOnce","succeedNextTime","succeedNextTime");
+        OrderCreated orderCreated=TestEventData.buildOrderCreatedEvent(randomUUID(),"my-item");
+        sendMessage(ORDER_CREATED_TOPIC,randomUUID().toString(),orderCreated);
+
+        await().atMost(3,TimeUnit.SECONDS).pollDelay(100,TimeUnit.MILLISECONDS)
+                .until(testListener.dispatchPreparingCounter::get,equalTo(1));
+        await().atMost(1,TimeUnit.SECONDS).pollDelay(100,TimeUnit.MILLISECONDS)
+                .until(testListener.orderDispatchedCounter::get,equalTo(1));
+
+        await().atMost(1,TimeUnit.SECONDS).pollDelay(100,TimeUnit.MILLISECONDS)
+                .until(testListener.dispatchCompletedCounter::get,equalTo(1));
+
+    }
+
+
+
+
 
     private void sendMessage(String topic, String key, Object payload) throws Exception {
         kafkaTemplate.send(
