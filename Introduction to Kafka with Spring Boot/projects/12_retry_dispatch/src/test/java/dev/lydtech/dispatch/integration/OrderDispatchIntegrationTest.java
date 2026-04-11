@@ -1,24 +1,20 @@
 package dev.lydtech.dispatch.integration;
 
-
-import java.time.LocalDate;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import dev.lydtech.dispatch.config.DispatchConfiguration;
+import com.github.tomakehurst.wiremock.WireMockServer;
 import dev.lydtech.dispatch.message.DispatchCompleted;
 import dev.lydtech.dispatch.message.DispatchPreparing;
 import dev.lydtech.dispatch.message.OrderCreated;
 import dev.lydtech.dispatch.message.OrderDispatched;
 import dev.lydtech.dispatch.util.TestEventData;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
@@ -32,7 +28,16 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
+import java.time.LocalDate;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static dev.lydtech.dispatch.integration.WiremockUtils.stubWiremock;
 import static java.util.UUID.randomUUID;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -40,147 +45,179 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
 @Slf4j
-@SpringBootTest(classes = {
-        DispatchConfiguration.class,
-        OrderDispatchIntegrationTest.TestConfig.class
-})
+@SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @ActiveProfiles("test")
 @EmbeddedKafka(controlledShutdown = true)
-public class OrderDispatchIntegrationTest {
-    private final static String ORDER_CREATED_TOPIC = "order.created";
-    private final static String ORDER_DISPATCHED_TOPIC = "order.dispatched";
-    private final static String DISPATCH_TRACKING_TOPIC = "dispatch.tracking";
+class OrderDispatchIntegrationTest {
+
+    private static final String ORDER_CREATED_TOPIC = "order.created";
+    private static final String ORDER_DISPATCHED_TOPIC = "order.dispatched";
+    private static final String DISPATCH_TRACKING_TOPIC = "dispatch.tracking";
+
+    private static final WireMockServer wireMockServer = new WireMockServer(options().dynamicPort());
+
+    @BeforeAll
+    static void startWireMock() {
+        wireMockServer.start();
+        configureFor("localhost", wireMockServer.port());
+    }
+
+    @AfterAll
+    static void stopWireMock() {
+        if (wireMockServer.isRunning()) {
+            wireMockServer.stop();
+        }
+    }
+
+    @DynamicPropertySource
+    static void registerProperties(DynamicPropertyRegistry registry) {
+        registry.add(
+                "dispatch.stockServiceEndpoint",
+                () -> "http://localhost:" + wireMockServer.port() + "/api/stock"
+        );
+    }
 
     @Autowired
-    private KafkaTemplate kafkaTemplate;
+    private KafkaTemplate<String, Object> kafkaTemplate;
+
     @Autowired
     private EmbeddedKafkaBroker embeddedKafkaBroker;
 
     @Autowired
     private KafkaListenerEndpointRegistry registry;
 
-
     @Autowired
     private KafkaTestListener testListener;
 
-    @Configuration
+    @TestConfiguration
     static class TestConfig {
 
         @Bean
-        public KafkaTestListener testListener() {
+        KafkaTestListener testListener() {
             return new KafkaTestListener();
         }
     }
 
-    /**
-     * Use this receiver to consume messages from the outbound topics.
-     */
+    @KafkaListener(
+            groupId = "kafkaIntegrationTest",
+            topics = {DISPATCH_TRACKING_TOPIC, ORDER_DISPATCHED_TOPIC}
+    )
+    static class KafkaTestListener {
 
-    @KafkaListener(groupId ="kafkaIntegrationTest", topics = {DISPATCH_TRACKING_TOPIC, ORDER_DISPATCHED_TOPIC})
-    public static class KafkaTestListener {
         AtomicInteger dispatchPreparingCounter = new AtomicInteger(0);
         AtomicInteger orderDispatchedCounter = new AtomicInteger(0);
-        AtomicInteger dispatchCompletedCounter=new AtomicInteger(0);
+        AtomicInteger dispatchCompletedCounter = new AtomicInteger(0);
 
-
-       // @KafkaListener(groupId = "KafkaIntegrationTest", topics = DISPATCH_TRACKING_TOPIC)
         @KafkaHandler
-        void receiveDispatchPreparing(@Header(KafkaHeaders.RECEIVED_KEY) String key, @Payload DispatchPreparing payload) {
-
-            log.info("receiveDispatchPreparing=>Received DispatchPreparing key: {}  - payload: {}", key, payload);
+        void receiveDispatchPreparing(
+                @Header(KafkaHeaders.RECEIVED_KEY) String key,
+                @Payload DispatchPreparing payload
+        ) {
+            log.info("Received DispatchPreparing. key={}, payload={}", key, payload);
             assertThat(key, notNullValue());
             assertThat(payload, notNullValue());
             dispatchPreparingCounter.incrementAndGet();
         }
 
-       // @KafkaListener(groupId = "KafkaIntegrationTest", topics = ORDER_DISPATCHED_TOPIC)
         @KafkaHandler
-        void receiveOrderDispatched(@Header(KafkaHeaders.RECEIVED_KEY) String key, @Payload OrderDispatched payload) {
-            log.info("receiveOrderDispatched ==> Received OrderDispatched: key: {} - payload :{} ", key, payload);
+        void receiveOrderDispatched(
+                @Header(KafkaHeaders.RECEIVED_KEY) String key,
+                @Payload OrderDispatched payload
+        ) {
+            log.info("Received OrderDispatched. key={}, payload={}", key, payload);
             assertThat(key, notNullValue());
             assertThat(payload, notNullValue());
             orderDispatchedCounter.incrementAndGet();
         }
 
         @KafkaHandler
-        void receivedDispatchCompleted(@Header(KafkaHeaders.RECEIVED_KEY) String key, @Payload DispatchCompleted dispatchCompleted){
-            log.info("receivedDispatchCompleted ==> Received DispatchCompleted : key : {} - payload: {}", key,dispatchCompleted);
-            assertThat(key,notNullValue());
-            assertThat(dispatchCompleted, notNullValue());
+        void receiveDispatchCompleted(
+                @Header(KafkaHeaders.RECEIVED_KEY) String key,
+                @Payload DispatchCompleted payload
+        ) {
+            log.info("Received DispatchCompleted. key={}, payload={}", key, payload);
+            assertThat(key, notNullValue());
+            assertThat(payload, notNullValue());
             dispatchCompletedCounter.incrementAndGet();
         }
     }
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         testListener.dispatchPreparingCounter.set(0);
         testListener.orderDispatchedCounter.set(0);
         testListener.dispatchCompletedCounter.set(0);
 
-        // Wait until the partitions are assigned.
-//        registry.getListenerContainers().stream().forEach(container ->
-//                ContainerTestUtils.waitForAssignment(container, embeddedKafkaBroker.getPartitionsPerTopic()));
+        WiremockUtils.reset();
 
-        // Wait until the partitions are assigned.  The application listener container has one topic and the test
-        // listener container has multiple topics, so take that into account when awaiting for topic assignment.
-        registry.getListenerContainers().stream()
-                .forEach(container -> ContainerTestUtils.waitForAssignment(container,
-                        container.getContainerProperties().getTopics().length * embeddedKafkaBroker.getPartitionsPerTopic()));
+        registry.getListenerContainers().forEach(container -> {
+            String[] topics = container.getContainerProperties().getTopics();
+            int topicCount = (topics != null ? topics.length : 1);
 
+            ContainerTestUtils.waitForAssignment(
+                    container,
+                    topicCount * embeddedKafkaBroker.getPartitionsPerTopic()
+            );
+        });
     }
 
     @Test
-    public void testOrderDispatchFlow() throws Exception {
+    void testOrderDispatchFlow_Success() throws Exception {
+        stubWiremock("/api/stock?item=my-item", 200, "true");
+
         OrderCreated orderCreated =
                 TestEventData.buildOrderCreatedEvent(randomUUID(), "my-item");
+
         sendMessage(ORDER_CREATED_TOPIC, randomUUID().toString(), orderCreated);
-    }
 
-    @Test
-    public void testDispatchTrackingListenerOnly() throws Exception {
-        DispatchPreparing payload = DispatchPreparing.builder()
-                .orderId(randomUUID())
-                .build();
-        log.info("testDispatchTrackingListenerOnly===> Received OrderDispatched### " + payload);
-        sendMessage(DISPATCH_TRACKING_TOPIC,randomUUID().toString(), payload);
-
-        await().atMost(5, TimeUnit.SECONDS)
-                .until(testListener.dispatchPreparingCounter::get, equalTo(1));
-//        await().atMost(3, TimeUnit.SECONDS).pollDelay(100, TimeUnit.MILLISECONDS)
-//                .until(testListener.dispatchPreparingCounter::get, equalTo(1));
-    }
-
-
-    @Test
-    public void testOrderDispatchedListenerOnly() throws Exception {
-        OrderDispatched orderDispatched = OrderDispatched.builder()
-                .orderId(randomUUID())
-                .build();
-        log.info("testOrderDispatchedListenerOnly===> ");
-        sendMessage(ORDER_DISPATCHED_TOPIC,randomUUID().toString(), orderDispatched);
         await().atMost(5, TimeUnit.SECONDS)
                 .until(testListener.orderDispatchedCounter::get, equalTo(1));
     }
 
+    @Test
+    void testDispatchTrackingListenerOnly() throws Exception {
+        DispatchPreparing payload = DispatchPreparing.builder()
+                .orderId(randomUUID())
+                .build();
+
+        sendMessage(DISPATCH_TRACKING_TOPIC, randomUUID().toString(), payload);
+
+        await().atMost(5, TimeUnit.SECONDS)
+                .until(testListener.dispatchPreparingCounter::get, equalTo(1));
+    }
 
     @Test
-    public void testDispatchCompletedListenerOnly() throws Exception {
-        DispatchCompleted dispatchCompleted=DispatchCompleted.builder()
+    void testOrderDispatchedListenerOnly() throws Exception {
+        OrderDispatched payload = OrderDispatched.builder()
+                .orderId(randomUUID())
+                .build();
+
+        sendMessage(ORDER_DISPATCHED_TOPIC, randomUUID().toString(), payload);
+
+        await().atMost(5, TimeUnit.SECONDS)
+                .until(testListener.orderDispatchedCounter::get, equalTo(1));
+    }
+
+    @Test
+    void testDispatchCompletedListenerOnly() throws Exception {
+        DispatchCompleted payload = DispatchCompleted.builder()
                 .orderId(randomUUID())
                 .dispatchedDate(LocalDate.now().toString())
                 .build();
-        log.info("testDispatchCompletedListenerOnly ==>");
-        sendMessage(DISPATCH_TRACKING_TOPIC,randomUUID().toString(),dispatchCompleted);
+
+        sendMessage(DISPATCH_TRACKING_TOPIC, randomUUID().toString(), payload);
+
         await().atMost(5, TimeUnit.SECONDS)
-                .until(testListener.dispatchCompletedCounter::get,equalTo(1));
+                .until(testListener.dispatchCompletedCounter::get, equalTo(1));
     }
 
-    private void sendMessage(String topic, String key, Object data) throws Exception {
-        kafkaTemplate.send(MessageBuilder
-                .withPayload(data)
-                .setHeader(KafkaHeaders.KEY, key)
-                .setHeader(KafkaHeaders.TOPIC, topic)
-                .build()).get();
+    private void sendMessage(String topic, String key, Object payload) throws Exception {
+        kafkaTemplate.send(
+                MessageBuilder.withPayload(payload)
+                        .setHeader(KafkaHeaders.TOPIC, topic)
+                        .setHeader(KafkaHeaders.KEY, key)
+                        .build()
+        ).get();
     }
 }

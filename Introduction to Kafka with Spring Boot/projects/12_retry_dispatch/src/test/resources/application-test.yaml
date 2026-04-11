@@ -1,5 +1,20 @@
-kafka:
-    bootstrap-servers: ${spring.embedded.kafka.brokers}
+#kafka:
+#    bootstrap-servers: ${spring.embedded.kafka.brokers}
+#
+#dispatch:
+#    stockServiceEndpoint: http://localhost:${wiremock.server.port}/api/stock
 
-dispatch:
-    stockServiceEndpoint: http://localhost:${wiremock.server.port}/api/stock
+spring:
+    kafka:
+        bootstrap-servers: ${spring.embedded.kafka.brokers}
+
+
+#dispatch:
+#    stockServiceEndpoint: http://localhost:${wiremock.server.port}/api/stock
+
+
+logging:
+    level:
+        org.springframework: INFO
+        org.springframework.test.context: DEBUG
+        org.springframework.beans.factory: DEBUG
