@@ -1,5 +1,217 @@
 
 
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-contract-wiremock</artifactId>
+    <version>4.0.1</version>
+    <scope>test</scope>
+</dependency>
+```
+
+### 🧪 Spring Cloud Contract WireMock — Summary Table
+| Item              | Description                          |
+| ----------------- | ------------------------------------ |
+| Library           | spring-cloud-contract-wiremock       |
+| Purpose           | Mock external HTTP services in tests |
+| Scope             | test (used only during testing)      |
+| Based on          | WireMock server                      |
+| Use case          | Integration testing of REST clients  |
+| Starts server     | Automatically in Spring Boot tests   |
+| Port              | Random or configurable               |
+| No real API call  | Yes — replaces real service          |
+| Common annotation | `@AutoConfigureWireMock`             |
+
+
+---
+
+```java
+
+@Slf4j
+@Component
+public class StockServiceClient {
+
+    private final RestTemplate restTemplate;
+
+    private final String stockServiceEndpoint;
+
+    public StockServiceClient(@Autowired RestTemplate restTemplate, @Value("${dispatch.stockServiceEndpoint}") String stockServiceEndpoint) {
+        this.restTemplate = restTemplate;
+        this.stockServiceEndpoint = stockServiceEndpoint;
+    }
+
+    /**
+     * The stock service returns true if item is available, false otherwise.
+     */
+    public String checkAvailability(String item) {
+        try {
+            ResponseEntity<String> response = restTemplate.getForEntity(stockServiceEndpoint+"?item="+item, String.class);
+            if (response.getStatusCodeValue() != 200) {
+                throw new RuntimeException("error " + response.getStatusCodeValue());
+            }
+            return response.getBody();
+        } catch (HttpServerErrorException | ResourceAccessException e) {
+            log.warn("Failure calling external service", e);
+            throw new RetryableException(e);
+        } catch (Exception e) {
+            log.error("Exception thrown: " + e.getClass().getName(), e);
+            throw e;
+        }
+    }
+}
+```
+
+## 📦 StockServiceClient — Summary
+### 🎯 Purpose
+
+Calls **external Stock Service** using `RestTemplate` to check item availability.
+
+#### 🧱 Class Overview
+
+| Component              | Purpose                 |
+| ---------------------- | ----------------------- |
+| `@Component`           | Spring managed bean     |
+| `@Slf4j`               | Enables logging         |
+| `RestTemplate`         | Calls external REST API |
+| `stockServiceEndpoint` | External service URL    |
+| `checkAvailability()`  | Calls stock service     |
+
+
+## 🔧 Dependency Injection
+```java
+public StockServiceClient(
+    RestTemplate restTemplate,
+    @Value("${dispatch.stockServiceEndpoint}") String stockServiceEndpoint)
+```    
+
+| Dependency           | From            | Purpose      |
+| -------------------- | --------------- | ------------ |
+| RestTemplate         | Spring Bean     | HTTP calls   |
+| stockServiceEndpoint | application.yml | External URL |
+
+## 🌐 External Call
+
+```java
+restTemplate.getForEntity(
+    stockServiceEndpoint + "?item=" + item,
+    String.class
+);
+```
+
+Example:
+```bash
+http://stock-service/stock?item=iphone
+```
+
+Response:
+```bash
+true
+```
+## 🔄 Method Flow
+
+```bash
+checkAvailability()
+        ↓
+Call external service
+        ↓
+Check HTTP status
+        ↓
+Return response
+        ↓
+Handle exceptions
+```
+
+## 📋 Method Summary
+
+| Step | Code            | Description              |
+| ---- | --------------- | ------------------------ |
+| 1    | call REST       | Calls stock service      |
+| 2    | check status    | Must be 200              |
+| 3    | return body     | "true" or "false"        |
+| 4    | retryable error | throw RetryableException |
+| 5    | other error     | rethrow                  |
+
+
+## ⚠️ Exception Handling
+
+**Retryable Exceptions**
+
+```java
+catch (HttpServerErrorException | ResourceAccessException e)
+```
+| Exception                | Meaning                   | Action      |
+| ------------------------ | ------------------------- | ----------- |
+| HttpServerErrorException | 5xx error                 | retry       |
+| ResourceAccessException  | timeout / connection fail | retry       |
+| Result                   | RetryableException        | Kafka retry |
+
+
+**Non-Retryable Exception**
+```java
+catch (Exception e)
+```
+
+| Exception       | Action           |
+| --------------- | ---------------- |
+| Any other error | fail immediately |
+
+
+## 🧪 Example Response Handling
+**Case 1 — Success**
+
+```java
+HTTP 200
+Body = true
+```
+
+Return:
+```
+true
+```
+**Case 2 — Server Error**
+
+```java
+HTTP 500
+```
+Throws:
+```bash
+RetryableException
+```
+**Case 3 — Timeout**
+```java
+Connection timeout
+```
+Throws:
+```bash
+RetryableException
+```
+
+## 🔁 Why RetryableException?
+
+Used by:
+- Kafka Retry
+- Spring Retry
+- Error Handler
+- DLT logic
+
+```bash
+RetryableException
+     ↓
+Retry
+     ↓
+Retry
+     ↓
+Retry
+     ↓
+DLT
+```
+
+## 📊 Return Value
+
+| Response  | Meaning            |
+| --------- | ------------------ |
+| `"true"`  | Item available     |
+| `"false"` | Item not available |
 
 
 ------

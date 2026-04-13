@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="4bed3a74-7b23-468b-8230-e6f510d83c82" name="Changes" comment="Section 11">
+      <change beforePath="$PROJECT_DIR$/../../Section 12 Error Handling Retry and Dead Letter Topics/readme.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../Section 12 Error Handling Retry and Dead Letter Topics/readme.md" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../../.." />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "ckgauro"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/ckgauro/kafka.git",
+    "accountId": "c0c2c814-e31d-44d2-8042-a34e7bcb6344"
+  }
+}]]></component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHomeTypeForPersistence" value="WRAPPER" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 4
+}]]></component>
+  <component name="ProjectId" id="3BktFSQgBDsiHXCL1xrSqdQI58G" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "JUnit.DispatchServiceTest.process_DispatchTrackingProducerThrowsException.executor": "Run",
+    "JUnit.DispatchServiceTest.process_OrderDispatchedThrowsException.executor": "Run",
+    "JUnit.DispatchServiceTest.process_SecondDispatchedProducerThrowException.executor": "Run",
+    "JUnit.DispatchServiceTest.process_Success.executor": "Run",
+    "JUnit.OrderDispatchIntegrationTest (1).executor": "Run",
+    "JUnit.OrderDispatchIntegrationTest.executor": "Run",
+    "JUnit.OrderDispatchIntegrationTest.testOrderDispatchFlow.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "Spring Boot.DispatchApplication.executor": "Run",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/Users/chandragauro/Tutorial/github/kafka/Introduction to Kafka with Spring Boot/projects/11_assignment_multiple_event_dispatch copy/pom.xml"
+  }
+}]]></component>
+  <component name="RunManager" selected="Spring Boot.DispatchApplication">
+    <configuration name="DispatchServiceTest.process_DispatchTrackingProducerThrowsException" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="dispatch" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="dev.lydtech.dispatch.service.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="dev.lydtech.dispatch.service" />
+      <option name="MAIN_CLASS_NAME" value="dev.lydtech.dispatch.service.DispatchServiceTest" />
+      <option name="METHOD_NAME" value="process_DispatchTrackingProducerThrowsException" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="DispatchServiceTest.process_OrderDispatchedThrowsException" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="dispatch" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="dev.lydtech.dispatch.service.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="dev.lydtech.dispatch.service" />
+      <option name="MAIN_CLASS_NAME" value="dev.lydtech.dispatch.service.DispatchServiceTest" />
+      <option name="METHOD_NAME" value="process_OrderDispatchedThrowsException" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="DispatchServiceTest.process_SecondDispatchedProducerThrowException" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="dispatch" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="dev.lydtech.dispatch.service.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="dev.lydtech.dispatch.service" />
+      <option name="MAIN_CLASS_NAME" value="dev.lydtech.dispatch.service.DispatchServiceTest" />
+      <option name="METHOD_NAME" value="process_SecondDispatchedProducerThrowException" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="DispatchServiceTest.process_Success" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="dispatch" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="dev.lydtech.dispatch.service.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="dev.lydtech.dispatch.service" />
+      <option name="MAIN_CLASS_NAME" value="dev.lydtech.dispatch.service.DispatchServiceTest" />
+      <option name="METHOD_NAME" value="process_Success" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="DispatchApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UnknownPolicyInFreeMode" />
+      <module name="dispatch" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="dev.lydtech.dispatch.DispatchApplication" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="dev.lydtech.dispatch.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Spring Boot.DispatchApplication" />
+        <item itemvalue="JUnit.DispatchServiceTest.process_SecondDispatchedProducerThrowException" />
+        <item itemvalue="JUnit.DispatchServiceTest.process_OrderDispatchedThrowsException" />
+        <item itemvalue="JUnit.DispatchServiceTest.process_DispatchTrackingProducerThrowsException" />
+        <item itemvalue="JUnit.DispatchServiceTest.process_Success" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-cffe25b9f5b3-intellij.indexing.shared.core-IU-253.28294.334" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="4bed3a74-7b23-468b-8230-e6f510d83c82" name="Changes" comment="" />
+      <created>1775044791853</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1775044791853</updated>
+    </task>
+    <task id="LOCAL-00001" summary="Section 11">
+      <option name="closed" value="true" />
+      <created>1775155898729</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1775155898730</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
+    <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Section 11" />
+    <option name="LAST_COMMIT_MESSAGE" value="Section 11" />
+  </component>
+</project>
